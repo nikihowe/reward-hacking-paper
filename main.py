@@ -24,7 +24,7 @@ simple_rewards = np.array([[0, 1],
 # print(env.get_ineqs_from_policies_and_rewards(policies, simple_rewards))
 
 
-def run_search(worse_policy, better_policy, env):
+def run_search(worse_policy, better_policy, make_reward_fun, env):
     print("policies being equated:", worse_policy, better_policy)
 
     double_all_permutations = list(itertools.permutations(policies))
@@ -44,9 +44,11 @@ def run_search(worse_policy, better_policy, env):
         dec_vars = np.random.uniform(0, 1, 7)  # rewards and epsilon
 
         # Check whether we've already seen this permutation
-        rewards = dec_vars[:4].reshape(2, 2)
-        policies_and_rewards = env.get_sorted_policies_and_rewards(policies, rewards)
+        # rewards = dec_vars[:4].reshape(2, 2)
+        temp_reward_fun = make_reward_fun(dec_vars)
+        policies_and_rewards = env.get_sorted_policies_and_rewards(policies, reward_fun=temp_reward_fun)
         # print("policies and rewards:", policies_and_rewards)
+
         policy_permutation = []
         for (p, r) in policies_and_rewards:
             policy_permutation.append(p)
@@ -54,14 +56,17 @@ def run_search(worse_policy, better_policy, env):
         if policy_permutation in all_permutations:
             print(f"running {_}: {policy_permutation}; {len(all_permutations)} left")
             all_permutations.remove(policy_permutation)
+            # print("considered permutations:", considered_permutations)
             considered_permutations.add(policy_permutation)
         else:
             continue
 
         eq_constraints = utils.make_specific_eq_constraints(env=env,
+                                                            make_reward_fun=make_reward_fun,
                                                             worse_policy=worse_policy,
                                                             better_policy=better_policy)
         ineq_constraints = utils.make_ineq_constraints(policy_permutation=policy_permutation,
+                                                       make_reward_fun=make_reward_fun,
                                                        env=env)  # pp or policies?
 
         res = minimize(
@@ -80,26 +85,26 @@ def run_search(worse_policy, better_policy, env):
         if res.success:
             print(res.x)
             print("the values of the policies are")
-            all_ave_policy_vals = env.get_all_average_policy_values(policy_permutation, res.x[:4].reshape(2, 2))
+            temp_rf = make_reward_fun(res.x)
+            all_ave_policy_vals = env.get_all_average_policy_values(policy_permutation=policy_permutation,
+                                                                    reward_fun=temp_rf)
             for i, policy in enumerate(policy_permutation):
                 print(f"{policy}: {all_ave_policy_vals[i]}")
             print()
 
-    print("#######################################################")
+        # print("#######################################################")
 
-
-#
-# print("possible permutations")
-# considered_permutations = sorted(list(considered_permutations))
-# for perm in considered_permutations:
-#     print(perm)
-#
-# print()
-#
-# print("impossible permutations")
-# all_permutations = sorted(list(all_permutations))
-# for perm in all_permutations:
-#     print(perm)
+        # print("possible permutations")
+        # considered_permutations = sorted(list(considered_permutations))
+        # for perm in considered_permutations:
+        #     print(perm)
+        #
+        # print()
+        #
+        # print("impossible permutations")
+        # all_permutations = sorted(list(all_permutations))
+        # for perm in all_permutations:
+        #     print(perm)
 
 #####################
 #####################
@@ -112,8 +117,21 @@ def run_search(worse_policy, better_policy, env):
 #                       ((0, 1), (1, 1)),
 #                       ((1, 0), (1, 1))]
 #
+#
+# def search_make_reward_fun(dec_vars):
+#     rewards = dec_vars[:4].reshape((2, 2))
+#
+#     def reward_fun(state, action):
+#         return rewards[state, action]
+#
+#     return reward_fun
+#
+#
 # for worse_policy, better_policy in policies_to_equate:
-#     run_search(worse_policy, better_policy, env)
+#     run_search(worse_policy=worse_policy,
+#                better_policy=better_policy,
+#                make_reward_fun=search_make_reward_fun,
+#                env=env)
 
 ###############################
 
@@ -200,4 +218,7 @@ r11 = 1
 rrr = np.array([[r00, r01],
                 [r10, r11]])
 
-print(env.get_all_average_policy_values(policies, rrr))
+def rrr_fun(state, action):
+    return rrr[state, action]
+
+print(env.get_all_average_policy_values(policies, rrr_fun))

@@ -6,17 +6,17 @@ from itertools import combinations
 from mdp_env import MDPEnv
 
 
-def ineq_constraints(decision_vars, policy_permutation, env: MDPEnv):
+def ineq_constraints(decision_vars, policy_permutation, make_reward_fun, env: MDPEnv):
     # Extract the current reward decision variables (and current epsilons)
     r00, r01, r10, r11, *epss = decision_vars
 
-    # Reshape them into rewards
-    rewards = decision_vars[:4].reshape((2, 2))
+    # Make the reward function using the functional passed in
+    reward_fun = make_reward_fun(decision_vars)
 
     # Get the values of the four different policies (in the order they *should* be)
     policy_values = []
     for policy in policy_permutation:
-        policy_values.append(env.get_average_policy_value(policy, rewards))
+        policy_values.append(env.get_average_policy_value(policy=policy, reward_fun=reward_fun))
 
     # Get the differences between adjacent policy performances
     ineqs_with_eps = []
@@ -35,9 +35,9 @@ def ineq_constraints(decision_vars, policy_permutation, env: MDPEnv):
     return ineqs_with_eps
 
 
-def make_ineq_constraints(policy_permutation, env):
+def make_ineq_constraints(policy_permutation, make_reward_fun, env):
     def curried_ineq_constraints(decision_vars):
-        return ineq_constraints(decision_vars, policy_permutation, env)
+        return ineq_constraints(decision_vars, policy_permutation, make_reward_fun, env)
 
     return curried_ineq_constraints
 
@@ -57,19 +57,25 @@ def make_ineq_constraints(policy_permutation, env):
 #     return curried_eq_constraints
 
 
-def get_specific_eq_constraints(decision_vars, env: MDPEnv, worse_policy, better_policy):
+def get_specific_eq_constraints(decision_vars, env: MDPEnv, make_reward_fun, worse_policy, better_policy):
     """
     Make an equality constraint setting the values of the two policies equal
     """
-    rewards = decision_vars[:4].reshape((2, 2))
-    v_worse_policy = env.get_average_policy_value(worse_policy, rewards)
-    v_better_policy = env.get_average_policy_value(better_policy, rewards)
+    # rewards = decision_vars[:4].reshape((2, 2))
+    reward_fun = make_reward_fun(decision_vars)
+
+    v_worse_policy = env.get_average_policy_value(worse_policy, reward_fun=reward_fun)
+    v_better_policy = env.get_average_policy_value(better_policy, reward_fun=reward_fun)
     return np.array([v_worse_policy - v_better_policy])
 
 
-def make_specific_eq_constraints(env, worse_policy, better_policy):
+def make_specific_eq_constraints(env, make_reward_fun, worse_policy, better_policy):
     def curried_specific_eq_constraints(decision_vars):
-        return get_specific_eq_constraints(decision_vars, env, worse_policy, better_policy)
+        return get_specific_eq_constraints(decision_vars=decision_vars,
+                                           env=env,
+                                           make_reward_fun=make_reward_fun,
+                                           worse_policy=worse_policy,
+                                           better_policy=better_policy)
 
     return curried_specific_eq_constraints
 

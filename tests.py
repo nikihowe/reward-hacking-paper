@@ -17,8 +17,9 @@ class TestEnvMethods(unittest.TestCase):
         policies = [(0, 0), (0, 1), (1, 0), (1, 1)]
         rewards = np.array([[0, 0],  # state 0
                             [1, 1]])  # state 1
+        reward_fun = lambda s, a: rewards[s, a]
 
-        all_ave_policy_vals = env.get_all_average_policy_values(policies, rewards)
+        all_ave_policy_vals = env.get_all_average_policy_values(policies, reward_fun)
         np.testing.assert_array_equal(all_ave_policy_vals, np.array([0.5, 1.0, 1.0, 1.5]))
 
     def test_policies2(self):
@@ -30,8 +31,9 @@ class TestEnvMethods(unittest.TestCase):
         policies = [(0, 0), (0, 1), (1, 0), (1, 1)]
         rewards = np.array([[0, 1],  # state 0
                             [2, 0.5]])  # state 1
+        reward_fun = lambda s, a: rewards[s, a]
 
-        all_ave_policy_vals = env.get_all_average_policy_values(policies, rewards)
+        all_ave_policy_vals = env.get_all_average_policy_values(policies, reward_fun)
         np.testing.assert_array_equal(all_ave_policy_vals, np.array([1.0, 0.5, 3.0, 1.25]))
 
     def test_policy_permutation(self):
@@ -43,8 +45,9 @@ class TestEnvMethods(unittest.TestCase):
         policies = [(0, 1), (0, 0), (1, 1), (1, 0)]
         rewards = np.array([[0, 0],  # state 0
                             [1, 1]])  # state 1
+        reward_fun = lambda s, a: rewards[s, a]
 
-        all_ave_policy_vals = env.get_all_average_policy_values(policies, rewards)
+        all_ave_policy_vals = env.get_all_average_policy_values(policies, reward_fun)
         np.testing.assert_array_equal(all_ave_policy_vals, np.array([1.0, 0.5, 1.5, 1.0]))
 
     # Test
