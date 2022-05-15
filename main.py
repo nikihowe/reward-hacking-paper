@@ -105,15 +105,15 @@ def run_search(worse_policy, better_policy, env):
 #####################
 #####################
 
-policies_to_equate = [((0, 0), (0, 1)),
-                      ((0, 0), (1, 0)),
-                      ((0, 0), (1, 1)),
-                      ((0, 1), (1, 0)),
-                      ((0, 1), (1, 1)),
-                      ((1, 0), (1, 1))]
-
-for worse_policy, better_policy in policies_to_equate:
-    run_search(worse_policy, better_policy, env)
+# policies_to_equate = [((0, 0), (0, 1)),
+#                       ((0, 0), (1, 0)),
+#                       ((0, 0), (1, 1)),
+#                       ((0, 1), (1, 0)),
+#                       ((0, 1), (1, 1)),
+#                       ((1, 0), (1, 1))]
+#
+# for worse_policy, better_policy in policies_to_equate:
+#     run_search(worse_policy, better_policy, env)
 
 ###############################
 
@@ -148,7 +148,7 @@ for worse_policy, better_policy in policies_to_equate:
 # for i, policy in enumerate(policies):
 #     print(f"{policy}: {pol_vals[i]}")
 
-print("#######################################################")
+# print("#######################################################")
 
 # guess_dec_vars = np.array([17.65, 7.75, 22.60, 5.18, 0., 2.13, 1.02])
 
@@ -192,12 +192,12 @@ print("#######################################################")
 
 
 
-# r00 = 1
-# r01 = -1
-# r10 = -1
-# r11 = 1
-#
-# rrr = np.array([[r00, r01],
-#                 [r10, r11]])
-#
-# print(env.get_all_average_policy_values(policies, rrr))
+r00 = 1
+r01 = 0
+r10 = 0
+r11 = 1
+
+rrr = np.array([[r00, r01],
+                [r10, r11]])
+
+print(env.get_all_average_policy_values(policies, rrr))
