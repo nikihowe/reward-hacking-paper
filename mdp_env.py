@@ -10,8 +10,7 @@ class MDPEnv(object):
     """
     Used to store some simple MDP elements
     """
-    states: np.ndarray
-    actions: np.ndarray
+    dynamics: Callable
     discount: float
 
     # def get_best_action(state, rewards):
@@ -35,7 +34,7 @@ class MDPEnv(object):
             action = policy_fun(state)
             return reward_fun(state, action) \
                    + self.discount * self.get_policy_value_with_counter(policy_fun=policy_fun,
-                                                                        state=self.states[action],
+                                                                        state=self.dynamics(state=state, action=action),
                                                                         reward_fun=reward_fun,
                                                                         counter=counter - 1)
         else:
@@ -57,7 +56,8 @@ class MDPEnv(object):
                                                      reward_fun=reward_fun,
                                                      counter=500)) / 2
 
-    def get_all_average_policy_values(self, policy_permutation: list[Callable], reward_fun: Callable[[int, int], float]):
+    def get_all_average_policy_values(self, policy_permutation: list[Callable],
+                                      reward_fun: Callable[[int, int], float]):
         res = []
         for policy_fun in policy_permutation:
             res.append(self.get_average_policy_value(policy_fun, reward_fun))

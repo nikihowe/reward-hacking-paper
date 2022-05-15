@@ -10,10 +10,12 @@ class TestEnvMethods(unittest.TestCase):
 
     # Test policies
     def test_policies(self):
-        states = np.array([0, 1])
-        actions = np.array([0, 1])
+        def dynamics(state, action):
+            del state
+            return action
+
         discount = 0.5
-        env = MDPEnv(states=states, actions=actions, discount=discount)
+        env = MDPEnv(dynamics=dynamics, discount=discount)
 
         policies = [(0, 0), (0, 1), (1, 0), (1, 1)]
         policy_funs = [
@@ -30,10 +32,12 @@ class TestEnvMethods(unittest.TestCase):
         np.testing.assert_array_equal(all_ave_policy_vals, np.array([0.5, 1.0, 1.0, 1.5]))
 
     def test_policies2(self):
-        states = np.array([0, 1])
-        actions = np.array([0, 1])
+        def dynamics(state, action):
+            del state
+            return action
+
         discount = 0.5
-        env = MDPEnv(states=states, actions=actions, discount=discount)
+        env = MDPEnv(dynamics=dynamics, discount=discount)
 
         policies = [(0, 0), (0, 1), (1, 0), (1, 1)]
         policy_funs = [
@@ -50,10 +54,12 @@ class TestEnvMethods(unittest.TestCase):
         np.testing.assert_array_equal(all_ave_policy_vals, np.array([1.0, 0.5, 3.0, 1.25]))
 
     def test_policy_permutation(self):
-        states = np.array([0, 1])
-        actions = np.array([0, 1])
+        def dynamics(state, action):
+            del state
+            return action
+
         discount = 0.5
-        env = MDPEnv(states=states, actions=actions, discount=discount)
+        env = MDPEnv(dynamics=dynamics, discount=discount)
 
         policies = [(0, 1), (0, 0), (1, 1), (1, 0)]
         policy_funs = [
@@ -68,8 +74,6 @@ class TestEnvMethods(unittest.TestCase):
 
         all_ave_policy_vals = env.get_all_average_policy_values(policy_funs, reward_fun)
         np.testing.assert_array_equal(all_ave_policy_vals, np.array([1.0, 0.5, 1.5, 1.0]))
-
-    # Test
 
 
 if __name__ == '__main__':

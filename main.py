@@ -9,10 +9,12 @@ from policy import Policy, make_two_state_policy
 import utils
 
 # Set up the MDP Enviroment
-states = np.array([0, 1])
-actions = np.array([0, 1])
+def dynamics(state, action):
+    del state
+    return action
+
 discount = 0.5
-env = MDPEnv(states=states, actions=actions, discount=discount)
+env = MDPEnv(dynamics=dynamics, discount=discount)
 
 # Choose the set of policies and rewards to consider
 policies = [(0, 0), (0, 1), (1, 0), (1, 1)]
@@ -104,7 +106,7 @@ def run_search(worse_policy: Policy, better_policy: Policy, make_reward_fun, env
                 print(f"{policy}: {all_ave_policy_vals[i]}")
             print()
 
-        # print("#######################################################")
+        print("#######################################################")
 
         # print("possible permutations")
         # considered_permutations = sorted(list(considered_permutations))
@@ -239,4 +241,3 @@ def run_search(worse_policy: Policy, better_policy: Policy, make_reward_fun, env
 ##################
 # Cleaning robot #
 ##################
-
