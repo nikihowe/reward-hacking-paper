@@ -32,6 +32,9 @@ class MDPEnv(object):
     def get_policy_value_with_counter(self, state, policy_fun: Callable, reward_fun: Callable, counter):
         if counter > 0:
             action = policy_fun(state)
+            # print("state", state)
+            # print("action", action)
+            # print("reward_fun", reward_fun(state, action))
             return reward_fun(state, action) \
                    + self.discount * self.get_policy_value_with_counter(policy_fun=policy_fun,
                                                                         state=self.dynamics(state=state, action=action),

@@ -8,9 +8,10 @@ from mdp_env import MDPEnv
 from policy import Policy
 
 
-def ineq_constraints(decision_vars, policy_permutation: list[Policy], make_reward_fun: Callable, env: MDPEnv):
+def ineq_constraints(decision_vars, policy_permutation: list[Policy], make_reward_fun: Callable, num_eps: int, env: MDPEnv):
     # Extract the current reward decision variables (and current epsilons)
-    r00, r01, r10, r11, *epss = decision_vars
+    # r00, r01, r10, r11, *epss = decision_vars
+    epss = decision_vars[-num_eps:]
 
     # Make the reward function using the functional passed in
     reward_fun = make_reward_fun(decision_vars)
@@ -37,9 +38,9 @@ def ineq_constraints(decision_vars, policy_permutation: list[Policy], make_rewar
     return ineqs_with_eps
 
 
-def make_ineq_constraints(policy_permutation, make_reward_fun, env):
+def make_ineq_constraints(policy_permutation, make_reward_fun: Callable, num_eps: int, env):
     def curried_ineq_constraints(decision_vars):
-        return ineq_constraints(decision_vars, policy_permutation, make_reward_fun, env)
+        return ineq_constraints(decision_vars, policy_permutation, make_reward_fun, num_eps, env)
 
     return curried_ineq_constraints
 
@@ -66,8 +67,8 @@ def get_specific_eq_constraints(decision_vars, env: MDPEnv, make_reward_fun, wor
     # rewards = decision_vars[:4].reshape((2, 2))
     reward_fun = make_reward_fun(decision_vars)
 
-    v_worse_policy = env.get_average_policy_value(worse_policy, reward_fun=reward_fun)
-    v_better_policy = env.get_average_policy_value(better_policy, reward_fun=reward_fun)
+    v_worse_policy = env.get_average_policy_value(policy_fun=worse_policy, reward_fun=reward_fun)
+    v_better_policy = env.get_average_policy_value(policy_fun=better_policy, reward_fun=reward_fun)
     return np.array([v_worse_policy - v_better_policy])
 
 
@@ -91,16 +92,15 @@ def check_reward_gameability(holistic_reward_fun, narrow_reward_fun):
     holistic reward function.
     """
 
-    all_actions = np.array([
-        [0, 0, 0],
-        [0, 0, 1],
-        [0, 1, 0],
-        [0, 1, 1],
-        [1, 0, 0],
-        [1, 0, 1],
-        [1, 1, 0],
-        [1, 1, 1]]
-    )
+    all_actions = [
+        (0, 0, 0),
+        (0, 0, 1),
+        (0, 1, 0),
+        (0, 1, 1),
+        (1, 0, 0),
+        (1, 0, 1),
+        (1, 1, 0),
+        (1, 1, 1)]
 
     counter = 0
     for action1, action2 in combinations(all_actions, 2):
@@ -121,17 +121,22 @@ if __name__ == "__main__":
     def hr1(action):
         return action @ np.array([3, 4, 5])
 
+
     def nr1(action):
         return action @ np.array([4, 4, 4])
+
 
     def hr2(action):
         return action @ np.array([5, 2, 2])
 
+
     def nr2(action):
         return action @ np.array([1, 0, 0])
 
+
     def nr3(action):
         return action @ np.array([2, 2, 2])
+
 
     def hr3(action):
         return action @ np.array([1, 0, 0])
@@ -140,4 +145,3 @@ if __name__ == "__main__":
     print(check_reward_gameability(hr1, nr1))
     print(check_reward_gameability(hr2, nr2))
     print(check_reward_gameability(hr3, nr3))
-

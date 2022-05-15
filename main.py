@@ -5,13 +5,15 @@ import numpy as np
 from scipy.optimize import minimize
 
 from mdp_env import MDPEnv
-from policy import Policy, make_two_state_policy
+from policy import Policy, make_cleaning_policy, make_two_state_policy
 import utils
+
 
 # Set up the MDP Enviroment
 def dynamics(state, action):
     del state
     return action
+
 
 discount = 0.5
 env = MDPEnv(dynamics=dynamics, discount=discount)
@@ -21,6 +23,7 @@ policies = [(0, 0), (0, 1), (1, 0), (1, 1)]
 policy_funs = []
 for policy in policies:
     policy_funs.append(make_two_state_policy(policy))
+
 
 # for policy_fun in policy_funs:
 #     print("looking at fun", policy_fun)
@@ -119,6 +122,7 @@ def run_search(worse_policy: Policy, better_policy: Policy, make_reward_fun, env
         # all_permutations = sorted(list(all_permutations))
         # for perm in all_permutations:
         #     print(perm)
+
 
 #####################
 #####################
@@ -223,7 +227,6 @@ def run_search(worse_policy: Policy, better_policy: Policy, make_reward_fun, env
 #         print(f"{policy}: {pol_vals[i]}")
 
 
-
 # r00 = 1
 # r01 = 0
 # r10 = 0
@@ -241,3 +244,132 @@ def run_search(worse_policy: Policy, better_policy: Policy, make_reward_fun, env
 ##################
 # Cleaning robot #
 ##################
+
+# It's a one-step bandit, so we're going to pretend there is only one state: 0
+def cleaning_dynamics(state, action):
+    del state, action
+    return 0
+
+
+def make_cleaning_reward_fun(rewards):
+    def reward_fun(state, action):
+        del state
+        return action @ rewards
+
+    return reward_fun
+
+
+def search_make_cleaning_reward_fun(dec_vars):
+    rewards = dec_vars[:3]
+
+    def reward_fun(state, action):
+        del state
+        return action @ rewards
+
+    return reward_fun
+
+
+def run_cleaning_search(worse_policy: Policy,
+                        better_policy: Policy,
+                        cleaning_policy_funs: list[Policy],
+                        make_reward_fun, env) -> None:
+    print("policy funs being equated:", worse_policy, better_policy)
+
+    double_permutations = list(itertools.permutations(cleaning_policy_funs))
+    all_permutations = set()
+    lower_policy = make_cleaning_policy((0, 0, 0))
+    higher_policy = make_cleaning_policy((1, 1, 1))
+
+    # print("checking cleaning policy outputs")
+    # print(lower_policy(0))
+    # print(lower_policy(1))
+    # print(higher_policy(0))
+    for perm in double_permutations:
+        if perm.index(lower_policy) < perm.index(higher_policy):
+            all_permutations.add(perm)
+
+    # print("all permutations", all_permutations)
+    considered_permutations = set()
+
+    for _ in range(1000):
+        # Generate random decision variables
+        # reward: 3, epsilons: 7
+        dec_vars = np.random.uniform(0, 1, 10)  # rewards and epsilon
+        # dec_vars[:3] = [1, 2, 3]
+        # print("rewards are", dec_vars[:3])
+
+        # Check whether we've already seen this permutation
+        temp_reward_fun = make_reward_fun(dec_vars[:3])
+        policies_and_rewards = env.get_sorted_policies_and_rewards(cleaning_policy_funs, reward_fun=temp_reward_fun)
+        # print("policies and rewards:")
+        # for par in policies_and_rewards:
+        #     print(par)
+
+        policy_permutation = []
+        for (p, r) in policies_and_rewards:
+            policy_permutation.append(p)
+        policy_permutation = tuple(policy_permutation)
+        if policy_permutation in all_permutations:
+            print(f"running {_}: {policy_permutation}; {len(all_permutations)} left")
+            all_permutations.remove(policy_permutation)
+            # print("considered permutations:", considered_permutations)
+            considered_permutations.add(policy_permutation)
+        else:
+            continue
+
+        eq_constraints = utils.make_specific_eq_constraints(env=env,
+                                                            make_reward_fun=make_reward_fun,
+                                                            worse_policy=worse_policy,
+                                                            better_policy=better_policy)
+        ineq_constraints = utils.make_ineq_constraints(policy_permutation=policy_permutation,
+                                                       make_reward_fun=make_reward_fun,
+                                                       num_eps=7,
+                                                       env=env)  # pp or policies?
+
+        res = minimize(
+            fun=lambda vars_and_epsilons: -np.sum(vars_and_epsilons[3:]),  # sum of epsilons
+            x0=np.ones(10),
+            constraints=
+            [{"type": "eq",
+              "fun": eq_constraints},
+             {"type": "ineq",
+              "fun": ineq_constraints}]
+        )
+        if res.success:
+            print(res.x)
+            print("the values of the policies are")
+            temp_rf = make_reward_fun(res.x)
+            all_ave_policy_vals = env.get_all_average_policy_values(policy_permutation=policy_permutation,
+                                                                    reward_fun=temp_rf)
+            for i, policy in enumerate(policy_permutation):
+                print(f"{policy}: {all_ave_policy_vals[i]}")
+            print()
+
+        print("#######################################################")
+
+
+cleaning_policies = [
+    (0, 0, 0),
+    (0, 0, 1),
+    (0, 1, 0),
+    (0, 1, 1),
+    (1, 0, 0),
+    (1, 0, 1),
+    (1, 1, 0),
+    (1, 1, 1)]
+
+cleaning_policy_funs = []
+for cleaning_policy_list in cleaning_policies:
+    cleaning_policy_funs.append(make_cleaning_policy(cleaning_policy_list))
+
+# for cp in cleaning_policy_funs:
+#     print("pp", cp)
+
+cleaning_env = MDPEnv(dynamics=cleaning_dynamics, discount=0)
+
+run_cleaning_search(worse_policy=make_cleaning_policy((0, 0, 0)),
+                    better_policy=make_cleaning_policy((0, 0, 1)),
+                    cleaning_policy_funs=cleaning_policy_funs,
+                    make_reward_fun=search_make_cleaning_reward_fun,
+                    env=cleaning_env,
+                    )
