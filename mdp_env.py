@@ -2,6 +2,8 @@
 import dataclasses
 import numpy as np
 
+from typing import Callable
+
 
 @dataclasses.dataclass
 class MDPEnv(object):
@@ -28,42 +30,48 @@ class MDPEnv(object):
     # def get_Q(self, state, action, rewards):
     #     return self.get_Q_with_counter(state=state, action=action, rewards=rewards, counter=100)
 
-    def get_policy_value_with_counter(self, policy, state, reward_fun, counter):
+    def get_policy_value_with_counter(self, state, policy_fun: Callable, reward_fun: Callable, counter):
         if counter > 0:
-            action = policy[state]
+            action = policy_fun(state)
             return reward_fun(state, action) \
-                   + self.discount * self.get_policy_value_with_counter(policy=policy,
+                   + self.discount * self.get_policy_value_with_counter(policy_fun=policy_fun,
                                                                         state=self.states[action],
                                                                         reward_fun=reward_fun,
                                                                         counter=counter - 1)
         else:
             return 0
 
-    def get_policy_value(self, policy, state, reward_fun):
-        return self.get_policy_value_with_counter(policy=policy,
-                                                  state=state,
+    def get_policy_value(self, policy_fun, state, reward_fun):
+        return self.get_policy_value_with_counter(state=state,
+                                                  policy_fun=policy_fun,
                                                   reward_fun=reward_fun,
                                                   counter=500)
 
-    def get_average_policy_value(self, policy, reward_fun):
-        return (self.get_policy_value_with_counter(policy=policy, state=0, reward_fun=reward_fun, counter=500)
-                + self.get_policy_value_with_counter(policy=policy, state=1, reward_fun=reward_fun, counter=500)) / 2
+    def get_average_policy_value(self, policy_fun, reward_fun):
+        return (self.get_policy_value_with_counter(policy_fun=policy_fun,
+                                                   state=0,
+                                                   reward_fun=reward_fun,
+                                                   counter=500)
+                + self.get_policy_value_with_counter(policy_fun=policy_fun,
+                                                     state=1,
+                                                     reward_fun=reward_fun,
+                                                     counter=500)) / 2
 
-    def get_all_average_policy_values(self, policy_permutation, reward_fun):
+    def get_all_average_policy_values(self, policy_permutation: list[Callable], reward_fun: Callable[[int, int], float]):
         res = []
-        for policy in policy_permutation:
-            res.append(self.get_average_policy_value(policy, reward_fun))
+        for policy_fun in policy_permutation:
+            res.append(self.get_average_policy_value(policy_fun, reward_fun))
         return res
 
-    def get_sorted_policies_and_rewards(self, policies, reward_fun):
+    def get_sorted_policies_and_rewards(self, policies: list[Callable], reward_fun: Callable[[int, int], float]):
         policies_and_rewards = []
-        for policy in policies:
-            value_of_policy = self.get_average_policy_value(policy, reward_fun)
-            policies_and_rewards.append((policy, value_of_policy))
+        for policy_fun in policies:
+            value_of_policy = self.get_average_policy_value(policy_fun, reward_fun)
+            policies_and_rewards.append((policy_fun, value_of_policy))
         sorted_policies_and_rewards = sorted(policies_and_rewards, key=lambda x: x[-1])
         return sorted_policies_and_rewards
 
-    def get_ineqs_from_policies_and_rewards(self, policies, reward_fun):
+    def get_ineqs_from_policies_and_rewards(self, policies: list[Callable], reward_fun):
         sorted_policies_and_rewards = self.get_sorted_policies_and_rewards(policies=policies, reward_fun=reward_fun)
 
         inequalities = []

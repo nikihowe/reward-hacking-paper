@@ -2,11 +2,13 @@
 import numpy as np
 
 from itertools import combinations
+from typing import Callable
 
 from mdp_env import MDPEnv
+from policy import Policy
 
 
-def ineq_constraints(decision_vars, policy_permutation, make_reward_fun, env: MDPEnv):
+def ineq_constraints(decision_vars, policy_permutation: list[Policy], make_reward_fun: Callable, env: MDPEnv):
     # Extract the current reward decision variables (and current epsilons)
     r00, r01, r10, r11, *epss = decision_vars
 
@@ -15,8 +17,8 @@ def ineq_constraints(decision_vars, policy_permutation, make_reward_fun, env: MD
 
     # Get the values of the four different policies (in the order they *should* be)
     policy_values = []
-    for policy in policy_permutation:
-        policy_values.append(env.get_average_policy_value(policy=policy, reward_fun=reward_fun))
+    for policy_fun in policy_permutation:
+        policy_values.append(env.get_average_policy_value(policy_fun=policy_fun, reward_fun=reward_fun))
 
     # Get the differences between adjacent policy performances
     ineqs_with_eps = []
