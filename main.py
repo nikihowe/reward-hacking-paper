@@ -80,10 +80,11 @@ def run_search(worse_policy: Policy, better_policy: Policy, make_reward_fun, env
 
         eq_constraints = utils.make_specific_eq_constraints(env=env,
                                                             make_reward_fun=make_reward_fun,
-                                                            worse_policy=worse_policy,
-                                                            better_policy=better_policy)
+                                                            equal_policy_pairs=[(worse_policy, better_policy)]
+                                                            )
         ineq_constraints = utils.make_ineq_constraints(policy_permutation=policy_permutation,
                                                        make_reward_fun=make_reward_fun,
+                                                       num_eps=4,
                                                        env=env)  # pp or policies?
 
         res = minimize(
@@ -269,13 +270,12 @@ def search_make_cleaning_reward_fun(dec_vars):
     return reward_fun
 
 
-def run_cleaning_search(worse_policy: Policy,
-                        better_policy: Policy,
-                        cleaning_policy_funs: list[Policy],
+def run_cleaning_search(equal_policy_list: list[tuple[Policy, Policy]],
+                        allowed_policies: list[Policy],
                         make_reward_fun, env) -> None:
-    print("policy funs being equated:", worse_policy, better_policy)
+    print("policy funs being equated:", equal_policy_list)
 
-    double_permutations = list(itertools.permutations(cleaning_policy_funs))
+    double_permutations = list(itertools.permutations(allowed_policies))
     all_permutations = set()
     lower_policy = make_cleaning_policy((0, 0, 0))
     higher_policy = make_cleaning_policy((1, 1, 1))
@@ -300,7 +300,7 @@ def run_cleaning_search(worse_policy: Policy,
 
         # Check whether we've already seen this permutation
         temp_reward_fun = make_reward_fun(dec_vars[:3])
-        policies_and_rewards = env.get_sorted_policies_and_rewards(cleaning_policy_funs, reward_fun=temp_reward_fun)
+        policies_and_rewards = env.get_sorted_policies_and_rewards(allowed_policies, reward_fun=temp_reward_fun)
         # print("policies and rewards:")
         # for par in policies_and_rewards:
         #     print(par)
@@ -319,8 +319,7 @@ def run_cleaning_search(worse_policy: Policy,
 
         eq_constraints = utils.make_specific_eq_constraints(env=env,
                                                             make_reward_fun=make_reward_fun,
-                                                            worse_policy=worse_policy,
-                                                            better_policy=better_policy)
+                                                            equal_policy_pairs=equal_policy_list)
         ineq_constraints = utils.make_ineq_constraints(policy_permutation=policy_permutation,
                                                        make_reward_fun=make_reward_fun,
                                                        num_eps=7,
@@ -328,7 +327,7 @@ def run_cleaning_search(worse_policy: Policy,
 
         res = minimize(
             fun=lambda vars_and_epsilons: -np.sum(vars_and_epsilons[3:]),  # sum of epsilons
-            x0=np.ones(10),
+            x0=np.array([0, 0, 1, 1, 1, 1, 1, 1, 1, 1]),
             constraints=
             [{"type": "eq",
               "fun": eq_constraints},
@@ -346,6 +345,20 @@ def run_cleaning_search(worse_policy: Policy,
             print()
 
         print("#######################################################")
+
+    print("possible permutations")
+    considered_permutations = sorted(list(considered_permutations))
+    print("num:", len(considered_permutations))
+    for perm in considered_permutations:
+        print(perm)
+
+    print()
+
+    # print("impossible permutations")
+    # all_permutations = sorted(list(all_permutations))
+    # print("num:", len(all_permutations))
+    # for perm in all_permutations:
+    #     print(perm)
 
 
 cleaning_policies = [
@@ -367,9 +380,18 @@ for cleaning_policy_list in cleaning_policies:
 
 cleaning_env = MDPEnv(dynamics=cleaning_dynamics, discount=0)
 
-run_cleaning_search(worse_policy=make_cleaning_policy((0, 0, 0)),
-                    better_policy=make_cleaning_policy((0, 0, 1)),
-                    cleaning_policy_funs=cleaning_policy_funs,
+p000 = make_cleaning_policy((0, 0, 0))
+p001 = make_cleaning_policy((0, 0, 1))
+p100 = make_cleaning_policy((1, 0, 0))
+p110 = make_cleaning_policy((1, 1, 0))
+p111 = make_cleaning_policy((1, 1, 1))
+
+new_allowed_policies = [p000, p001, p100, p110, p111]
+
+# policies_to_equate = [(p000, p001), (p100, p110)]
+policies_to_equate = [(p000, p110)]
+
+run_cleaning_search(equal_policy_list=policies_to_equate,
+                    allowed_policies=new_allowed_policies,
                     make_reward_fun=search_make_cleaning_reward_fun,
-                    env=cleaning_env,
-                    )
+                    env=cleaning_env)

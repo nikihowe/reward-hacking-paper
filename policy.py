@@ -25,6 +25,12 @@ class Policy(object):
     def __eq__(self, other):
         return str(self.name) == str(other.name)
 
+    def __le__(self, other):
+        return str(self.name) <= str(other.name)
+
+    def __lt__(self, other):
+        return str(self.name) < str(other.name)
+
 
 def make_two_state_policy(policy_tuple: tuple[int, int]) -> Policy:
     return Policy(policy_tuple, lambda state: policy_tuple[state])

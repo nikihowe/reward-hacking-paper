@@ -38,7 +38,10 @@ def ineq_constraints(decision_vars, policy_permutation: list[Policy], make_rewar
     return ineqs_with_eps
 
 
-def make_ineq_constraints(policy_permutation, make_reward_fun: Callable, num_eps: int, env):
+def make_ineq_constraints(policy_permutation,
+                          make_reward_fun: Callable,
+                          num_eps: int,
+                          env):
     def curried_ineq_constraints(decision_vars):
         return ineq_constraints(decision_vars, policy_permutation, make_reward_fun, num_eps, env)
 
@@ -60,25 +63,31 @@ def make_ineq_constraints(policy_permutation, make_reward_fun: Callable, num_eps
 #     return curried_eq_constraints
 
 
-def get_specific_eq_constraints(decision_vars, env: MDPEnv, make_reward_fun, worse_policy, better_policy):
+def get_specific_eq_constraints(decision_vars,
+                                env: MDPEnv,
+                                make_reward_fun: Callable,
+                                equal_policy_pairs: list[tuple[Policy, Policy]]):
     """
     Make an equality constraint setting the values of the two policies equal
     """
     # rewards = decision_vars[:4].reshape((2, 2))
     reward_fun = make_reward_fun(decision_vars)
 
-    v_worse_policy = env.get_average_policy_value(policy_fun=worse_policy, reward_fun=reward_fun)
-    v_better_policy = env.get_average_policy_value(policy_fun=better_policy, reward_fun=reward_fun)
-    return np.array([v_worse_policy - v_better_policy])
+    eq_constraints = []
+    for policy1, policy2 in equal_policy_pairs:
+        value1 = env.get_average_policy_value(policy_fun=policy1, reward_fun=reward_fun)
+        value2 = env.get_average_policy_value(policy_fun=policy2, reward_fun=reward_fun)
+        eq_constraints.append(value2 - value1)
+
+    return np.array(eq_constraints)
 
 
-def make_specific_eq_constraints(env, make_reward_fun, worse_policy, better_policy):
+def make_specific_eq_constraints(env, make_reward_fun, equal_policy_pairs: list[tuple[Policy, Policy]]):
     def curried_specific_eq_constraints(decision_vars):
         return get_specific_eq_constraints(decision_vars=decision_vars,
                                            env=env,
                                            make_reward_fun=make_reward_fun,
-                                           worse_policy=worse_policy,
-                                           better_policy=better_policy)
+                                           equal_policy_pairs=equal_policy_pairs)
 
     return curried_specific_eq_constraints
 
