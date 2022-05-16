@@ -274,6 +274,7 @@ def run_cleaning_search(equal_policy_list: list[tuple[Policy, Policy]],
                         allowed_policies: list[Policy],
                         make_reward_fun, env) -> None:
     print("policy funs being equated:", equal_policy_list)
+    num_eps = len(allowed_policies) - 1
 
     double_permutations = list(itertools.permutations(allowed_policies))
     all_permutations = set()
@@ -322,12 +323,12 @@ def run_cleaning_search(equal_policy_list: list[tuple[Policy, Policy]],
                                                             equal_policy_pairs=equal_policy_list)
         ineq_constraints = utils.make_ineq_constraints(policy_permutation=policy_permutation,
                                                        make_reward_fun=make_reward_fun,
-                                                       num_eps=7,
+                                                       num_eps=num_eps,
                                                        env=env)  # pp or policies?
 
         res = minimize(
-            fun=lambda vars_and_epsilons: -np.sum(vars_and_epsilons[3:]),  # sum of epsilons
-            x0=np.array([0, 0, 1, 1, 1, 1, 1, 1, 1, 1]),
+            fun=lambda vars_and_epsilons: -np.sum(vars_and_epsilons[num_eps:]),  # sum of epsilons
+            x0=np.ones(3 + num_eps),
             constraints=
             [{"type": "eq",
               "fun": eq_constraints},
@@ -382,14 +383,15 @@ cleaning_env = MDPEnv(dynamics=cleaning_dynamics, discount=0)
 
 p000 = make_cleaning_policy((0, 0, 0))
 p001 = make_cleaning_policy((0, 0, 1))
+p101 = make_cleaning_policy((1, 0, 1))
 p100 = make_cleaning_policy((1, 0, 0))
 p110 = make_cleaning_policy((1, 1, 0))
 p111 = make_cleaning_policy((1, 1, 1))
 
 new_allowed_policies = [p000, p001, p100, p110, p111]
 
-# policies_to_equate = [(p000, p001), (p100, p110)]
-policies_to_equate = [(p000, p110)]
+policies_to_equate = [(p000, p001), (p100, p110)]
+# policies_to_equate = [(p000, p110)]
 
 run_cleaning_search(equal_policy_list=policies_to_equate,
                     allowed_policies=new_allowed_policies,
