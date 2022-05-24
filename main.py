@@ -3,6 +3,7 @@ import itertools
 import numpy as np
 
 from scipy.optimize import minimize
+from typing import Callable
 
 from mdp_env import MDPEnv
 from policy import Policy, make_cleaning_policy, make_two_state_policy
@@ -41,8 +42,12 @@ for policy in policies:
 # raise SystemExit
 
 
-def run_search(worse_policy: Policy, better_policy: Policy, make_reward_fun, env):
-    print("policy funs being equated:", worse_policy, better_policy)
+def run_search(adjacent_policy_relations: list[int],
+               equal_policy_pairs: list[tuple[Policy, Policy]],
+               make_reward_fun: Callable,
+               env: MDPEnv,
+               num_eps=3):
+    print("policy funs being equated:", equal_policy_pairs)
 
     double_all_permutations = list(itertools.permutations(policy_funs))
     all_permutations = set()
@@ -78,19 +83,26 @@ def run_search(worse_policy: Policy, better_policy: Policy, make_reward_fun, env
         else:
             continue
 
+        # adjacent_policy_relations = [0, 0, 1]  # 0 equality, 1 inequality, 2 unspecified
+        policy_permutation = list(policy_permutation)
+        print("policy permutation:", policy_permutation)
+
         eq_constraints = utils.make_specific_eq_constraints(env=env,
+                                                            policy_permutation=policy_permutation,
                                                             make_reward_fun=make_reward_fun,
-                                                            equal_policy_pairs=[(worse_policy, better_policy)]
-                                                            )
+                                                            equal_policy_pairs=equal_policy_pairs,
+                                                            num_eps=num_eps,
+                                                            adjacent_policy_relations=adjacent_policy_relations)
         ineq_constraints = utils.make_ineq_constraints(policy_permutation=policy_permutation,
                                                        make_reward_fun=make_reward_fun,
-                                                       num_eps=4,
+                                                       num_eps=num_eps,
+                                                       adjacent_policy_relations=adjacent_policy_relations,
                                                        env=env)  # pp or policies?
 
         res = minimize(
-            fun=lambda vars_and_epsilons: (- vars_and_epsilons[-3]
-                                           - vars_and_epsilons[-2]
-                                           - vars_and_epsilons[-1]),  # sum of epsilons
+            fun=lambda vars_and_epsilons: np.minimum((- vars_and_epsilons[-3]
+                                                      - vars_and_epsilons[-2]
+                                                      - vars_and_epsilons[-1]), -10),  # sum of epsilons
             x0=np.array([.1, .1, .1, .1, .1, .1, .1]),
             constraints=
             [{"type": "eq",
@@ -101,56 +113,112 @@ def run_search(worse_policy: Policy, better_policy: Policy, make_reward_fun, env
             #       "fun": ineq_constraints}
         )
         if res.success:
-            print(res.x)
+            for i, num in enumerate(res.x):
+                if i < len(dec_vars) - num_eps:
+                    print(f"r_{i}: {round(num, 2)}")
+                else:
+                    print(f"eps_{i}: {round(num, 2)}")
+            # print(res.x)
             print("the values of the policies are")
             temp_rf = make_reward_fun(res.x)
             all_ave_policy_vals = env.get_all_average_policy_values(policy_permutation=policy_permutation,
                                                                     reward_fun=temp_rf)
             for i, policy in enumerate(policy_permutation):
-                print(f"{policy}: {all_ave_policy_vals[i]}")
+                print(f"{policy}: {round(all_ave_policy_vals[i], 2)}")
             print()
 
-        print("#######################################################")
+        print("-----------")
+    print("###########################################")
 
-        # print("possible permutations")
-        # considered_permutations = sorted(list(considered_permutations))
-        # for perm in considered_permutations:
-        #     print(perm)
-        #
-        # print()
-        #
-        # print("impossible permutations")
-        # all_permutations = sorted(list(all_permutations))
-        # for perm in all_permutations:
-        #     print(perm)
+    # print("possible permutations")
+    # considered_permutations = sorted(list(considered_permutations))
+    # for perm in considered_permutations:
+    #     print(perm)
+    #
+    # print()
+    #
+    # print("impossible permutations")
+    # all_permutations = sorted(list(all_permutations))
+    # for perm in all_permutations:
+    #     print(perm)
 
 
 #####################
 #####################
 #####################
 
-# policies_to_equate = [((0, 0), (0, 1)),
-#                       ((0, 0), (1, 0)),
-#                       ((0, 0), (1, 1)),
-#                       ((0, 1), (1, 0)),
-#                       ((0, 1), (1, 1)),
-#                       ((1, 0), (1, 1))]
-#
-#
-# def search_make_reward_fun(dec_vars):
-#     rewards = dec_vars[:4].reshape((2, 2))
-#
-#     def reward_fun(state, action):
-#         return rewards[state, action]
-#
-#     return reward_fun
-#
-#
+policies_to_equate = [((0, 0), (0, 1)),
+                      ((0, 0), (1, 0)),
+                      ((0, 0), (1, 1)),
+                      ((0, 1), (1, 0)),
+                      ((0, 1), (1, 1)),
+                      ((1, 0), (1, 1))]
+
+
+# triple_policies_to_equate = [((0, 0), (0, 1), (1, 0)),
+#                              ((0, 0), (0, 1), (1, 1)),
+#                              ((0, 0), (1, 0), (1, 1)),
+#                              ((0, 1), (1, 0), (1, 1))]
+
+
+def search_make_reward_fun(dec_vars):
+    rewards = dec_vars[:4].reshape((2, 2))
+
+    def reward_fun(state, action):
+        return rewards[state, action]
+
+    return reward_fun
+
+
 # for worse_policy, better_policy in policies_to_equate:
-#     run_search(worse_policy=Policy(worse_policy, lambda s: worse_policy[s]),
-#                better_policy=Policy(better_policy, lambda s: better_policy[s]),
+#     wp = make_two_state_policy(worse_policy)
+#     bp = make_two_state_policy(better_policy)
+#     run_search(equal_policy_pairs=[(wp, bp)],
 #                make_reward_fun=search_make_reward_fun,
 #                env=env)
+
+# for p1, p2, p3 in triple_policies_to_equate:
+#     pp1 = make_two_state_policy(p1)
+#     pp2 = make_two_state_policy(p2)
+#     pp3 = make_two_state_policy(p3)
+#     run_search(equal_policy_pairs=[(pp1, pp2), (pp1, pp3)],
+#                make_reward_fun=search_make_reward_fun,
+#                env=env)
+
+p00 = make_two_state_policy((0, 0))
+p01 = make_two_state_policy((0, 1))
+p10 = make_two_state_policy((1, 0))
+p11 = make_two_state_policy((1, 1))
+
+policy_permutation = [p00, p01, p10, p11]
+
+rewards = (0, 2, 2, 0)
+
+
+def temp_reward_fun(state, action):
+    if (state, action) == (0, 0):
+        return rewards[0]
+    elif (state, action) == (0, 1):
+        return rewards[1]
+    elif (state, action) == (1, 0):
+        return rewards[2]
+    elif (state, action) == (1, 1):
+        return rewards[3]
+    else:
+        raise SystemExit
+
+
+wp = make_two_state_policy((0, 0))
+bp = make_two_state_policy((1, 0))
+run_search(adjacent_policy_relations=[0, 1, 1],
+           equal_policy_pairs=[(wp, bp)],
+           make_reward_fun=search_make_reward_fun,
+           env=env)
+
+all_ave_policy_vals = env.get_all_average_policy_values(policy_permutation=policy_permutation,
+                                                        reward_fun=temp_reward_fun)
+print(all_ave_policy_vals)
+
 
 ###############################
 
@@ -361,39 +429,40 @@ def run_cleaning_search(equal_policy_list: list[tuple[Policy, Policy]],
     # for perm in all_permutations:
     #     print(perm)
 
-
-cleaning_policies = [
-    (0, 0, 0),
-    (0, 0, 1),
-    (0, 1, 0),
-    (0, 1, 1),
-    (1, 0, 0),
-    (1, 0, 1),
-    (1, 1, 0),
-    (1, 1, 1)]
-
-cleaning_policy_funs = []
-for cleaning_policy_list in cleaning_policies:
-    cleaning_policy_funs.append(make_cleaning_policy(cleaning_policy_list))
-
-# for cp in cleaning_policy_funs:
-#     print("pp", cp)
-
-cleaning_env = MDPEnv(dynamics=cleaning_dynamics, discount=0)
-
-p000 = make_cleaning_policy((0, 0, 0))
-p001 = make_cleaning_policy((0, 0, 1))
-p101 = make_cleaning_policy((1, 0, 1))
-p100 = make_cleaning_policy((1, 0, 0))
-p110 = make_cleaning_policy((1, 1, 0))
-p111 = make_cleaning_policy((1, 1, 1))
-
-new_allowed_policies = [p000, p001, p100, p110, p111]
-
-policies_to_equate = [(p000, p001), (p100, p110)]
+# cleaning_policies = [
+#     (0, 0, 0),
+#     (0, 0, 1),
+#     (0, 1, 0),
+#     (0, 1, 1),
+#     (1, 0, 0),
+#     (1, 0, 1),
+#     (1, 1, 0),
+#     (1, 1, 1)]
+#
+# cleaning_policy_funs = []
+# for cleaning_policy_list in cleaning_policies:
+#     cleaning_policy_funs.append(make_cleaning_policy(cleaning_policy_list))
+#
+# # for cp in cleaning_policy_funs:
+# #     print("pp", cp)
+#
+# cleaning_env = MDPEnv(dynamics=cleaning_dynamics, discount=0)
+#
+# p000 = make_cleaning_policy((0, 0, 0))
+# p001 = make_cleaning_policy((0, 0, 1))
+# p010 = make_cleaning_policy((0, 1, 0))
+# p011 = make_cleaning_policy((0, 1, 1))
+# p100 = make_cleaning_policy((1, 0, 0))
+# p101 = make_cleaning_policy((1, 0, 1))
+# p110 = make_cleaning_policy((1, 1, 0))
+# p111 = make_cleaning_policy((1, 1, 1))
+#
+# new_allowed_policies = [p000, p001, p100, p110, p111]
+#
+# # policies_to_equate = [(p000, p001), (p100, p110)]
 # policies_to_equate = [(p000, p110)]
-
-run_cleaning_search(equal_policy_list=policies_to_equate,
-                    allowed_policies=new_allowed_policies,
-                    make_reward_fun=search_make_cleaning_reward_fun,
-                    env=cleaning_env)
+#
+# run_cleaning_search(equal_policy_list=policies_to_equate,
+#                     allowed_policies=new_allowed_policies,
+#                     make_reward_fun=search_make_cleaning_reward_fun,
+#                     env=cleaning_env)
