@@ -16,21 +16,6 @@ class MDPEnv(object):
     dynamics: Callable
     discount: float
 
-    # def get_best_action(state, rewards):
-    #     return np.argmax(rewards[state])
-
-    # def get_Q_with_counter(self, state, action, rewards, counter):
-    #     if counter > 0:
-    #         return rewards[state, action] \
-    #                + self.discount * self.get_Q_with_counter(state=self.states[action],
-    #                                                          action=get_best_action(state, rewards),
-    #                                                          rewards=rewards,
-    #                                                          counter=counter - 1)
-    #     else:
-    #         return 0
-
-    # def get_Q(self, state, action, rewards):
-    #     return self.get_Q_with_counter(state=state, action=action, rewards=rewards, counter=100)
 
     def get_policy_value_with_counter(self, state, policy_fun: Callable, reward_fun: Callable, counter):
         if counter > 0:
