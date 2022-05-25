@@ -8,6 +8,7 @@ from typing import Callable
 from mdp_env import MDPEnv
 from permutations import calculate_achievable_permutations
 from policy import Policy, make_two_state_policy
+from simplification import run_simplification_search
 import utils
 
 REWARD_SIZE = 4  # four (s, a) pairs, different reward for each
@@ -41,10 +42,8 @@ def run_single_two_state_search(eq_constraints: Callable,
                                 make_reward_fun: Callable,
                                 policy_permutation: tuple[Policy],
                                 env: MDPEnv):
-    print("X0 is of shape", REWARD_SIZE + num_eps)
     res = minimize(
         fun=lambda x: 0,
-        # x0=np.array([.1, .1, .1, .1, .1, .1, .1]),
         x0=np.ones(REWARD_SIZE + num_eps),
         constraints=
         [{"type": "eq",
@@ -66,126 +65,6 @@ def run_single_two_state_search(eq_constraints: Callable,
             print(f"{i}: {round(res.x[i], 2)}")
         print()
         print()
-
-
-def run_search(adjacent_policy_relations: list[int],
-               equal_policy_pairs: list[tuple[Policy, Policy]],
-               make_reward_fun: Callable,
-               env: MDPEnv,
-               num_eps=3):
-    print("policy funs being equated:", equal_policy_pairs)
-
-    double_all_permutations = list(itertools.permutations(policy_funs))
-    all_permutations = set()
-
-    for i, perm in enumerate(double_all_permutations):
-        if perm.index(make_two_state_policy((0, 0))) < perm.index(make_two_state_policy((1, 1))):
-            all_permutations.add(perm)
-
-    considered_permutations = set()
-
-    for _ in range(1000):
-        # if _ % 100 == 0:
-        #     print(f"\n ~~~iter {_}~~~ \n")
-
-        # Generate random decision variables
-        dec_vars = np.random.uniform(0, 1, 7)  # rewards and epsilon
-
-        # Check whether we've already seen this permutation
-        # rewards = dec_vars[:4].reshape(2, 2)
-        temp_reward_fun = make_reward_fun(dec_vars)
-        policies_and_rewards = env.get_sorted_policies_and_rewards(policy_funs, reward_fun=temp_reward_fun)
-        # print("policies and rewards:", policies_and_rewards)
-
-        policy_permutation = []
-        for (p, r) in policies_and_rewards:
-            policy_permutation.append(p)
-        policy_permutation = tuple(policy_permutation)
-        if policy_permutation in all_permutations:
-            print(f"running {_}: {policy_permutation}; {len(all_permutations)} left")
-            all_permutations.remove(policy_permutation)
-            # print("considered permutations:", considered_permutations)
-            considered_permutations.add(policy_permutation)
-        else:
-            continue
-
-        # adjacent_policy_relations = [0, 0, 1]  # 0 equality, 1 inequality, 2 unspecified
-        policy_permutation = list(policy_permutation)
-        print("policy permutation:", policy_permutation)
-
-        eq_constraints = utils.make_specific_eq_constraints(env=env,
-                                                            policy_permutation=policy_permutation,
-                                                            make_reward_fun=make_reward_fun,
-                                                            equal_policy_pairs=equal_policy_pairs,
-                                                            num_eps=num_eps,
-                                                            adjacent_policy_relations=adjacent_policy_relations)
-        ineq_constraints = utils.make_ineq_constraints(policy_permutation=policy_permutation,
-                                                       make_reward_fun=make_reward_fun,
-                                                       num_eps=num_eps,
-                                                       adjacent_policy_relations=adjacent_policy_relations,
-                                                       env=env)  # pp or policies?
-
-        res = minimize(
-            # fun=lambda vars_and_epsilons: np.minimum((- vars_and_epsilons[-3]
-            #                                           - vars_and_epsilons[-2]
-            #                                           - vars_and_epsilons[-1]), -10),  # sum of epsilons
-            fun=lambda x: 0,
-            x0=np.array([.1, .1, .1, .1, .1, .1, .1]),
-            constraints=
-            [{"type": "eq",
-              "fun": eq_constraints},
-             {"type": "ineq",
-              "fun": ineq_constraints}]
-            #     {"type": "ineq",
-            #       "fun": ineq_constraints}
-        )
-        if res.success:
-            for i, num in enumerate(res.x):
-                if i < len(dec_vars) - num_eps:
-                    print(f"r_{i}: {round(num, 2)}")
-                else:
-                    print(f"eps_{i}: {round(num, 2)}")
-            # print(res.x)
-            print("the values of the policies are")
-            temp_rf = make_reward_fun(res.x)
-            all_ave_policy_vals = env.get_all_average_policy_values(policy_permutation=policy_permutation,
-                                                                    reward_fun=temp_rf)
-            for i, policy in enumerate(policy_permutation):
-                print(f"{policy}: {round(all_ave_policy_vals[i], 2)}")
-            print()
-
-        print("-----------")
-    print("###########################################")
-
-    # print("possible permutations")
-    # considered_permutations = sorted(list(considered_permutations))
-    # for perm in considered_permutations:
-    #     print(perm)
-    #
-    # print()
-    #
-    # print("impossible permutations")
-    # all_permutations = sorted(list(all_permutations))
-    # for perm in all_permutations:
-    #     print(perm)
-
-
-#####################
-#####################
-#####################
-
-policies_to_equate = [((0, 0), (0, 1)),
-                      ((0, 0), (1, 0)),
-                      ((0, 0), (1, 1)),
-                      ((0, 1), (1, 0)),
-                      ((0, 1), (1, 1)),
-                      ((1, 0), (1, 1))]
-
-
-# triple_policies_to_equate = [((0, 0), (0, 1), (1, 0)),
-#                              ((0, 0), (0, 1), (1, 1)),
-#                              ((0, 0), (1, 0), (1, 1)),
-#                              ((0, 1), (1, 0), (1, 1))]
 
 
 def search_make_reward_fun(dec_vars):
@@ -251,13 +130,24 @@ def temp_reward_fun(state, action):
 #            make_reward_fun=search_make_reward_fun,
 #            env=env)
 
-out = calculate_achievable_permutations(allowed_policies=policy_permutation,
-                                        make_reward_fun=make_reward_fun_from_dec_vars,
-                                        env=env,
-                                        reward_size=REWARD_SIZE,
-                                        search_steps=SEARCH_STEPS,
-                                        show_rewards=True,
-                                        print_output=True)
+achievable_permutations = calculate_achievable_permutations(allowed_policies=policy_permutation,
+                                                            make_reward_fun=make_reward_fun_from_dec_vars,
+                                                            env=env,
+                                                            reward_size=REWARD_SIZE,
+                                                            search_steps=SEARCH_STEPS,
+                                                            show_rewards=True,
+                                                            print_output=True)
+
+adjacent_policy_relations = [2, 2, 2]
+
+policies_to_equate = [(p00, p01)]
+
+run_simplification_search(adjacent_policy_relations=adjacent_policy_relations,
+                          equal_policy_list=policies_to_equate,
+                          policy_permutations=achievable_permutations,
+                          make_reward_fun=make_reward_fun_from_dec_vars,
+                          run_single_env_specific_search=run_single_two_state_search,
+                          env=env)
 
 # all_ave_policy_vals = env.get_all_average_policy_values(policy_permutation=policy_permutation,
 #                                                         reward_fun=temp_reward_fun)
