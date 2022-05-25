@@ -30,7 +30,7 @@ def make_reward_fun_from_dec_vars(dec_vars):
     return reward_fun
 
 
-def main():
+def run_two_state_mdp_experiment():
     # Set up the MDP\R
     discount = 0.5
     env = MDPEnv(dynamics=dynamics, discount=discount)
@@ -70,4 +70,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    run_two_state_mdp_experiment()

@@ -30,7 +30,7 @@ def make_reward_fun_from_dec_vars(dec_vars):
     return reward_fun
 
 
-def main():
+def run_cleaning_robot_experiment():
     # Set up the MDP\R
     cleaning_env = MDPEnv(dynamics=cleaning_dynamics, discount=0)
 
@@ -87,4 +87,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    run_cleaning_robot_experiment()
