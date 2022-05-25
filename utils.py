@@ -9,14 +9,13 @@ from policy import Policy
 
 
 def ineq_constraints(decision_vars,
-                     policy_permutation: list[Policy],
+                     policy_permutation: tuple[Policy],
                      make_reward_fun: Callable,
                      num_eps: int,
                      env: MDPEnv,
                      adjacent_policy_relations: list[int],  # 0: equality, 1: inequality, 2: unspecified
                      ):
     # Extract the current reward decision variables (and current epsilons)
-    # r00, r01, r10, r11, *epss = decision_vars
     epss = decision_vars[-num_eps:]
 
     # Make the reward function using the functional passed in
@@ -51,7 +50,7 @@ def ineq_constraints(decision_vars,
     return ineqs_with_eps
 
 
-def make_ineq_constraints(policy_permutation: list[Policy],
+def make_ineq_constraints(policy_permutation: tuple[Policy],
                           make_reward_fun: Callable,
                           num_eps: int,
                           env: MDPEnv,
@@ -115,7 +114,7 @@ def get_specific_eq_constraints(decision_vars: np.ndarray,
 
 
 def make_specific_eq_constraints(env: MDPEnv,
-                                 policy_permutation: list[Policy],
+                                 policy_permutation: tuple[Policy],
                                  make_reward_fun: Callable,
                                  equal_policy_pairs: list[tuple[Policy, Policy]],
                                  num_eps: int,

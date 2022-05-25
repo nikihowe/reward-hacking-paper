@@ -6,9 +6,11 @@ from scipy.optimize import minimize
 from typing import Callable
 
 from mdp_env import MDPEnv
-from policy import Policy, make_cleaning_policy, make_two_state_policy
+from permutations import calculate_achievable_permutations
+from policy import Policy, make_cleaning_policy
 import utils
 
+REWARD_SIZE = 3  # three rooms, so three reward components
 SEARCH_STEPS = 200
 
 
@@ -32,8 +34,8 @@ def make_cleaning_reward_fun(rewards):
 
 
 # Make a reward function from decision variables
-def search_make_cleaning_reward_fun(dec_vars):
-    rewards = dec_vars[:3]
+def make_reward_fun_from_dec_vars(dec_vars):
+    rewards = dec_vars[:REWARD_SIZE]
 
     def reward_fun(state, action):
         del state
@@ -42,61 +44,16 @@ def search_make_cleaning_reward_fun(dec_vars):
     return reward_fun
 
 
-# Calculate which permutations are possible
-def calculate_achievable_permutations(allowed_policies: list[Policy],
-                                      make_reward_fun: Callable,
-                                      env: MDPEnv,
-                                      show_rewards: bool = False,
-                                      print_output: bool = False) -> list[tuple[Policy]]:
-    print("Considering all orderings of the following policies:")
-    print(allowed_policies, '\n--------------------------------\n')
-
-    num_eps = len(allowed_policies) - 1
-
-    all_permutations = list(itertools.permutations(allowed_policies))
-
-    considered_permutations = []
-
-    for _ in range(SEARCH_STEPS):
-        dec_vars = np.random.uniform(0, 1, 3 + num_eps)  # rewards and epsilons
-
-        # Check whether we've already seen this permutation
-        temp_reward_fun = make_reward_fun(dec_vars[:num_eps])
-        policies_and_rewards = env.get_sorted_policies_and_rewards(allowed_policies, reward_fun=temp_reward_fun)
-
-        # If we've seen this permutation, skip it
-        policy_permutation = []
-        for (p, r) in policies_and_rewards:
-            policy_permutation.append(p)
-        policy_permutation = tuple(policy_permutation)
-        if policy_permutation in all_permutations:
-            if print_output:
-                print(f"Possible ordering: {policy_permutation}")
-                if show_rewards:
-                    print(f"Achieved with rewards: {dec_vars[:-num_eps]}")
-            all_permutations.remove(policy_permutation)
-            considered_permutations.append(policy_permutation)
-            print()
-        else:
-            continue
-
-    print("there were {} achieved permutations".format(len(considered_permutations)))
-    print("there were {} not achieved permutations".format(len(all_permutations)))
-    print("\n\n")
-
-    return considered_permutations
-
-
 def run_single_cleaning_search(eq_constraints: Callable,
                                ineq_constraints: Callable,
                                num_eps: int,
                                make_reward_fun: Callable,
-                               policy_permutation: list[Policy],
+                               policy_permutation: tuple[Policy],
                                env: MDPEnv):
     res = minimize(
-        fun=lambda vars_and_epsilons: np.minimum(-np.sum(vars_and_epsilons[-num_eps:]), -10),  # sum of epsilons
-        # fun=lambda x: 0,
-        x0=np.ones(3 + num_eps),
+        # fun=lambda vars_and_epsilons: np.minimum(-np.sum(vars_and_epsilons[-num_eps:]), -10),  # sum of epsilons
+        fun=lambda x: 0,
+        x0=np.ones(REWARD_SIZE + num_eps),
         constraints=
         [{"type": "eq",
           "fun": eq_constraints},
@@ -104,19 +61,24 @@ def run_single_cleaning_search(eq_constraints: Callable,
           "fun": ineq_constraints}]
     )
     if res.success:
-        print(res.x)
-        print("the values of the policies are")
+        print("Success! The values of the policies are")
         temp_rf = make_reward_fun(res.x)
         all_ave_policy_vals = env.get_all_average_policy_values(policy_permutation=policy_permutation,
                                                                 reward_fun=temp_rf)
         for i, policy in enumerate(policy_permutation):
-            print(f"{policy}: {all_ave_policy_vals[i]}")
+            print(f"{policy}: {round(all_ave_policy_vals[i], 2)}")
+        print()
+
+        print("Using rewards")
+        for i in range(REWARD_SIZE):
+            print(f"{i}: {round(res.x[i], 2)}")
+        print()
         print()
 
 
 def run_cleaning_search(adjacent_policy_relations: list[int],
                         equal_policy_list: list[tuple[Policy, Policy]],
-                        policy_permutations: list[tuple],
+                        policy_permutations: list[tuple[Policy]],
                         make_reward_fun: Callable,
                         env: MDPEnv) -> None:
     print("policy funs being equated:", equal_policy_list)
@@ -198,18 +160,20 @@ adjacent_policy_relations = [0, 0, 1, 0]
 #                     env=cleaning_env)
 
 
-# achievable_permutations = calculate_achievable_permutations(new_allowed_policies,
-#                                                             make_reward_fun=search_make_cleaning_reward_fun,
-#                                                             env=cleaning_env,
-#                                                             show_rewards=True,
-#                                                             print_output=True)
-
-achievable_permutations = [(p000, p001, p100, p110, p111),
-                           (p000, p100, p001, p110, p111),
-                           (p000, p100, p110, p001, p111)]
-
-run_cleaning_search(adjacent_policy_relations=adjacent_policy_relations,
-                    equal_policy_list=policies_to_equate,
-                    policy_permutations=achievable_permutations,
-                    make_reward_fun=search_make_cleaning_reward_fun,
-                    env=cleaning_env)
+achievable_permutations = calculate_achievable_permutations(new_allowed_policies,
+                                                            make_reward_fun=make_cleaning_reward_fun,
+                                                            env=cleaning_env,
+                                                            reward_size=REWARD_SIZE,
+                                                            search_steps=SEARCH_STEPS,
+                                                            show_rewards=True,
+                                                            print_output=True)
+#
+# achievable_permutations = [(p000, p001, p100, p110, p111),
+#                            (p000, p100, p001, p110, p111),
+#                            (p000, p100, p110, p001, p111)]
+#
+# run_cleaning_search(adjacent_policy_relations=adjacent_policy_relations,
+#                     equal_policy_list=policies_to_equate,
+#                     policy_permutations=achievable_permutations,
+#                     make_reward_fun=make_reward_fun_from_dec_vars,
+#                     env=cleaning_env)

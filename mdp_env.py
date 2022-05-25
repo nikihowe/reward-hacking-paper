@@ -1,8 +1,11 @@
 # (c) 2022 Nikolaus Howe
 import dataclasses
-import numpy as np
 
 from typing import Callable
+
+from policy import Policy
+
+POLICY_EVAL_HORIZON = 200  # how far in the future to calculate discounted rewards
 
 
 @dataclasses.dataclass
@@ -47,26 +50,26 @@ class MDPEnv(object):
         return self.get_policy_value_with_counter(state=state,
                                                   policy_fun=policy_fun,
                                                   reward_fun=reward_fun,
-                                                  counter=500)
+                                                  counter=POLICY_EVAL_HORIZON)
 
     def get_average_policy_value(self, policy_fun, reward_fun):
         return (self.get_policy_value_with_counter(policy_fun=policy_fun,
                                                    state=0,
                                                    reward_fun=reward_fun,
-                                                   counter=500)
+                                                   counter=POLICY_EVAL_HORIZON)
                 + self.get_policy_value_with_counter(policy_fun=policy_fun,
                                                      state=1,
                                                      reward_fun=reward_fun,
-                                                     counter=500)) / 2
+                                                     counter=POLICY_EVAL_HORIZON)) / 2
 
-    def get_all_average_policy_values(self, policy_permutation: list[Callable],
+    def get_all_average_policy_values(self, policy_permutation: tuple[Policy],
                                       reward_fun: Callable[[int, int], float]):
         res = []
         for policy_fun in policy_permutation:
             res.append(self.get_average_policy_value(policy_fun, reward_fun))
         return res
 
-    def get_sorted_policies_and_rewards(self, policies: list[Callable], reward_fun: Callable[[int, int], float]):
+    def get_sorted_policies_and_rewards(self, policies: tuple[Policy], reward_fun: Callable[[int, int], float]):
         policies_and_rewards = []
         for policy_fun in policies:
             value_of_policy = self.get_average_policy_value(policy_fun, reward_fun)
@@ -74,7 +77,7 @@ class MDPEnv(object):
         sorted_policies_and_rewards = sorted(policies_and_rewards, key=lambda x: x[-1])
         return sorted_policies_and_rewards
 
-    def get_ineqs_from_policies_and_rewards(self, policies: list[Callable], reward_fun):
+    def get_ineqs_from_policies_and_rewards(self, policies: tuple[Policy], reward_fun):
         sorted_policies_and_rewards = self.get_sorted_policies_and_rewards(policies=policies, reward_fun=reward_fun)
 
         inequalities = []
