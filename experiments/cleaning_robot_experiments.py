@@ -71,8 +71,8 @@ def main():
     # example, it finds them all without problem).
 
     # Enforce adjacent policy relations as desired
-    # The list must be of length len(allowed_policies) - 1
-    # 0: =, 1: <, 2: not specified
+    # The adjacent_policy_relations list must be of length len(allowed_policies) - 1
+    # 0: =, 1: <, 2: <=
     # adjacent_policy_relations = [2, 2, 2, 2, 2, 2, 2]
     adjacent_policy_relations = [2, 2, 2, 2]
 
