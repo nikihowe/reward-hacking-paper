@@ -42,30 +42,24 @@ def run_single_simplification_search(eq_constraints: Callable,
 
 
 def run_full_simplification_search(adjacent_policy_relations: list[int],
-                                   equal_policy_list: list[tuple[Policy, Policy]],
                                    policy_permutations: list[tuple[Policy]],
                                    make_reward_fun: Callable,
                                    reward_size: int,
                                    env: MDPEnv) -> None:
-    print("policy funs being equated:", equal_policy_list)
     num_eps = len(policy_permutations[0]) - 1
     print("num_eps:", num_eps)
 
     for policy_permutation in policy_permutations:
         print(f"Given permutation: {policy_permutation}")
-        print(f"Trying to set equal {equal_policy_list}")
         print(f"Adjacent policy relations: {adjacent_policy_relations}")
 
         eq_constraints = utils.make_eq_constraints(env=env,
                                                    policy_permutation=policy_permutation,
                                                    make_reward_fun=make_reward_fun,
-                                                   equal_policy_pairs=equal_policy_list,
-                                                   num_eps=num_eps,
                                                    adjacent_policy_relations=adjacent_policy_relations)
         ineq_constraints = utils.make_ineq_constraints(adjacent_policy_relations=adjacent_policy_relations,
                                                        policy_permutation=policy_permutation,
                                                        make_reward_fun=make_reward_fun,
-                                                       num_eps=num_eps,
                                                        env=env)
         run_single_simplification_search(eq_constraints=eq_constraints,
                                          ineq_constraints=ineq_constraints,

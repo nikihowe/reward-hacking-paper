@@ -63,12 +63,9 @@ def run_two_state_mdp_experiment():
     # Enforce adjacent policy relations as desired
     # The adjacent_policy_relations list must be of length len(allowed_policies) - 1
     # 0: =, 1: <, 2: <=
-    adjacent_policy_relations = [2, 2, 2]
-
-    policies_to_equate = [(p00, p11)]
+    adjacent_policy_relations = [1, 1, 1]
 
     run_full_simplification_search(adjacent_policy_relations=adjacent_policy_relations,
-                                   equal_policy_list=policies_to_equate,
                                    policy_permutations=achievable_permutations,
                                    make_reward_fun=make_reward_fun_from_dec_vars,
                                    reward_size=REWARD_SIZE,
