@@ -5,7 +5,7 @@ from policy import make_cleaning_policy
 from simplification import run_full_simplification_search
 
 REWARD_SIZE = 3  # three rooms, so three reward components
-SEARCH_STEPS = 200
+SEARCH_STEPS = 1000
 
 
 ##################
@@ -51,8 +51,8 @@ def main():
     p000, p001, p010, p011, p100, p101, p110, p111 = policy_funs
 
     # Specify which policies we want to choose among
-    allowed_policies = policy_funs
-    # allowed_policies = [p000, p001, p100, p110, p111]
+    # allowed_policies = policy_funs
+    allowed_policies = [p000, p001, p100, p110, p111]
 
     achievable_permutations = calculate_achievable_permutations(allowed_policies=allowed_policies,
                                                                 make_reward_fun=make_reward_fun_from_dec_vars,
@@ -65,11 +65,16 @@ def main():
     #                            (p000, p100, p001, p110, p111),
     #                            (p000, p100, p110, p001, p111)]
 
+    # Note that for the cleaning robot example, the mathematical program solver
+    # is not able to consistently find all the solutions. It would be interesting
+    # to better understand why this is the case (since in the two-state
+    # example, it finds them all without problem).
+
     # Enforce adjacent policy relations as desired
     # The list must be of length len(allowed_policies) - 1
     # 0: =, 1: <, 2: not specified
-    adjacent_policy_relations = [2, 2, 2, 2, 2, 2, 2]
-    # adjacent_policy_relations = [2, 2, 2, 2]
+    # adjacent_policy_relations = [2, 2, 2, 2, 2, 2, 2]
+    adjacent_policy_relations = [2, 2, 2, 2]
 
     policies_to_equate = [(p000, p100)]
 

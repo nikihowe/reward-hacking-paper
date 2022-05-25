@@ -6,7 +6,7 @@ from simplification import run_full_simplification_search
 
 REWARD_SIZE = 4  # four (s, a) pairs, different reward for each
 REWARD_SHAPE = (2, 2)
-SEARCH_STEPS = 200
+SEARCH_STEPS = 1000
 
 
 #################
@@ -58,7 +58,7 @@ def main():
     # 0: =, 1: <, 2: not specified
     adjacent_policy_relations = [2, 2, 2]
 
-    policies_to_equate = [(p00, p01)]
+    policies_to_equate = [(p00, p11)]
 
     run_full_simplification_search(adjacent_policy_relations=adjacent_policy_relations,
                                    equal_policy_list=policies_to_equate,
