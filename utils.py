@@ -29,8 +29,6 @@ def ineq_constraints(reward_components,
         if i > 0 and adjacent_policy_relations[i - 1] == 1:  # only add in the inequalities
             ineqs_with_eps.append(policy_values[i] - policy_values[i - 1] - epsilon)
 
-    ineqs_with_eps.append(np.sum(ineqs_with_eps))
-
     return ineqs_with_eps
 
 

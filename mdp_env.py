@@ -16,6 +16,7 @@ class MDPEnv(object):
     dynamics: Callable
     discount: float
 
+
     def get_policy_value_with_counter(self, state, policy_fun: Callable, reward_fun: Callable, counter):
         if counter > 0:
             action = policy_fun(state)
