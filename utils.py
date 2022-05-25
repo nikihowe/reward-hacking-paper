@@ -1,4 +1,4 @@
-# (c) 2021 Nikolaus Howe
+# (c) 2022 Nikolaus Howe
 import numpy as np
 
 from itertools import combinations
@@ -38,8 +38,12 @@ def ineq_constraints(decision_vars,
     for i, e in enumerate(epss):
         if adjacent_policy_relations[i] == 1:
             ineqs_with_eps.append(e - 0.1)  # since reward scale is arbitrary, 0.1 is fine here (want eps >> 0)
+        elif adjacent_policy_relations[i] == 0:
+            ineqs_with_eps.append(e)  # for some reason, this needs to be handled as ineq. -
+            ineqs_with_eps.append(-e)  # mysteriously using eq. doesn't always find a solution
         else:
-            ineqs_with_eps.append(e)  # should be handles by equality constraints
+            ineqs_with_eps.append(e)
+
 
     # Make at least one epsilon not negative
     ineqs_with_eps.append(epss[0] + epss[1] + epss[2] - 1e-4)
@@ -51,7 +55,7 @@ def make_ineq_constraints(policy_permutation: list[Policy],
                           make_reward_fun: Callable,
                           num_eps: int,
                           env: MDPEnv,
-                          adjacent_policy_relations: list[int] = None):
+                          adjacent_policy_relations: list[int]):
     def curried_ineq_constraints(decision_vars):
         return ineq_constraints(decision_vars, policy_permutation, make_reward_fun, num_eps, env,
                                 adjacent_policy_relations=adjacent_policy_relations)
@@ -86,7 +90,6 @@ def get_specific_eq_constraints(decision_vars: np.ndarray,
     """
     assert len(adjacent_policy_relations) == num_eps
 
-    # rewards = decision_vars[:4].reshape((2, 2))
     reward_fun = make_reward_fun(decision_vars)
     epss = decision_vars[-num_eps:]
 
@@ -105,7 +108,8 @@ def get_specific_eq_constraints(decision_vars: np.ndarray,
             left_value = env.get_average_policy_value(policy_fun=left_policy, reward_fun=reward_fun)
             right_value = env.get_average_policy_value(policy_fun=right_policy, reward_fun=reward_fun)
             eq_constraints.append(right_value - left_value - epss[i])  # somehow this pushes epss[i] to 0
-            # eq_constraints.append(epss[i])  # make sure epsilon is 0  # somehow this doesn't work
+            # eq_constraints.append(right_value - left_value)  # somehow this pushes epss[i] to 0
+            # eq_constraints.append(epss[i] - 1e-8)  # make sure epsilon is 0  # somehow this doesn't work
 
     return np.array(eq_constraints)
 
