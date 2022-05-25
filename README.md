@@ -30,3 +30,5 @@ See the code in the `experiments` directory for example experiments on the two e
 
 1) The `calculate_achievable_permutations` function can be used to calculated which permutations are achievable via a reward function. 
 2) The `run_full_simplification_search` function can be used to attempt to find reward functions which satisfy a given policy ordering simplification. In addition to specifying the policies to be equated, the user can further specify whether or not to impose equality, strict inequality, or inclusive inequality on policies which are adjacent in the initial ordering.
+
+To run an experiment, modify the code in `experiments` directory as desired, and then modify and call `run.py` from the root directory.
