@@ -30,6 +30,12 @@ def make_reward_fun_from_dec_vars(dec_vars):
     return reward_fun
 
 
+def get_policy_visit_count(env, policy_fun):
+    constant_reward_fun = lambda state, action: 1
+    discounted_visit_counts = env.get_average_policy_value(policy_fun, constant_reward_fun)
+
+
+
 def run_two_state_mdp_experiment():
     # Set up the MDP\R
     discount = 0.5
