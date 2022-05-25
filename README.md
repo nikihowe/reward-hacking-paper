@@ -8,7 +8,7 @@ This repository currently supports two tasks.
 ### Installation
 
 ```bash
-git clone https://github.com/nikihowe/simplified-reward.git
+git clone git@github.com:nikihowe/simplified-reward.git
 cd simplified-reward
 python3 -m venv venv
 python3 -m pip install -r requirements.txt
