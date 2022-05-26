@@ -13,7 +13,7 @@ def ineq_constraints(reward_components,
                      env: MDPEnv,
                      adjacent_policy_relations: list[int],  # 0: equality, 1: inequality, 2: unspecified
                      ):
-    epsilon = 0.1
+    epsilon = 1.
 
     # Make the reward function using the functional passed in
     reward_fun = make_reward_fun(reward_components)
@@ -84,3 +84,14 @@ def make_eq_constraints(env: MDPEnv,
                               adjacent_policy_relations=adjacent_policy_relations)
 
     return curried_eq_constraints
+
+
+def fancy_print_permutation(policy_permutation, adjacent_policy_relations, realized_rewards=None):
+    for i, policy in enumerate(policy_permutation[:-1]):
+        relation = '=' if adjacent_policy_relations[i] == 0 else '<' if adjacent_policy_relations[i] == 1 else '?'
+        print(policy, relation, end=' ')
+    print(policy_permutation[-1], end=' ')
+    if realized_rewards is not None:
+        print(realized_rewards)
+    else:
+        print()

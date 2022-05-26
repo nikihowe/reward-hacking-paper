@@ -30,6 +30,24 @@ def make_reward_fun_from_dec_vars(dec_vars):
     return reward_fun
 
 
+def fancy_print(perm, relation, reward):
+    toprint = []
+    for i, p in enumerate(perm):
+        if str(p) == "Policy(0, 0)":
+            toprint.append("p00")
+        elif str(p) == "Policy(0, 1)":
+            toprint.append("p01")
+        elif str(p) == "Policy(1, 0)":
+            toprint.append("p10")
+        elif str(p) == "Policy(1, 1)":
+            toprint.append("p11")
+
+        if i < len(relation):
+            toprint.append(" < " if relation[i] == 1 else " = ")
+
+    print("".join(toprint), ":", reward)
+
+
 def run_two_state_mdp_experiment():
     # Set up the MDP\R
     discount = 0.5
@@ -46,24 +64,34 @@ def run_two_state_mdp_experiment():
     # Specify which policies we want to choose among
     allowed_policies = policy_funs
 
-    achievable_permutations = calculate_achievable_permutations(allowed_policies=allowed_policies,
-                                                                make_reward_fun=make_reward_fun_from_dec_vars,
-                                                                env=env,
-                                                                reward_size=REWARD_SIZE,
-                                                                search_steps=SEARCH_STEPS,
-                                                                show_rewards=True,
-                                                                print_output=True)
+    realized_permutations, realized_relations, realized_rewards = calculate_achievable_permutations(
+        allowed_policies=allowed_policies,
+        make_reward_fun=make_reward_fun_from_dec_vars,
+        env=env,
+        reward_size=REWARD_SIZE, )
 
+    keep = []
+    for i, perm in enumerate(realized_permutations):
+        # utils.fancy_print_permutation(perm, realized_relations[i], realized_rewards[i])
+        if perm.index(p00) > perm.index(p11):
+            continue
+        if realized_relations[i] == (0, 0, 0):
+            continue
+        keep.append((perm, realized_relations[i], realized_rewards[i]))
+        fancy_print(perm, realized_relations[i], realized_rewards[i])
+
+    print("num perms", len(keep))
+    # Simplify the MDP\R
     # Enforce adjacent policy relations as desired
     # The adjacent_policy_relations list must be of length len(allowed_policies) - 1
     # 0: =, 1: <, 2: <=
-    adjacent_policy_relations = [1, 1, 1]
-
-    run_full_simplification_search(adjacent_policy_relations=adjacent_policy_relations,
-                                   policy_permutations=achievable_permutations,
-                                   make_reward_fun=make_reward_fun_from_dec_vars,
-                                   reward_size=REWARD_SIZE,
-                                   env=env)
+    # adjacent_policy_relations = [1, 1, 1]
+    #
+    # run_full_simplification_search(adjacent_policy_relations=adjacent_policy_relations,
+    #                                policy_permutations=achievable_permutations,
+    #                                make_reward_fun=make_reward_fun_from_dec_vars,
+    #                                reward_size=REWARD_SIZE,
+    #                                env=env)
 
 
 if __name__ == "__main__":

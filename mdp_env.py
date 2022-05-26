@@ -1,5 +1,6 @@
 # (c) 2022 Nikolaus Howe
 import dataclasses
+import numpy as np
 
 from typing import Callable
 
@@ -16,8 +17,7 @@ class MDPEnv(object):
     dynamics: Callable
     discount: float
 
-
-    def get_policy_value_with_counter(self, state, policy_fun: Callable, reward_fun: Callable, counter):
+    def get_policy_value_with_counter(self, state: int, policy_fun: Policy, reward_fun: Callable, counter):
         if counter > 0:
             action = policy_fun(state)
             # print("state", state)

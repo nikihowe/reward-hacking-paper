@@ -5,7 +5,7 @@ from policy import make_cleaning_policy
 from simplification import run_full_simplification_search
 
 REWARD_SIZE = 3  # three rooms, so three reward components
-SEARCH_STEPS = 1000
+SEARCH_STEPS = 2000
 
 
 ##################
@@ -19,10 +19,7 @@ def cleaning_dynamics(state, action):
 
 
 # Make a reward function from decision variables
-def make_reward_fun_from_dec_vars(dec_vars):
-    # Reward values are first in the decision variable array
-    rewards = dec_vars[:REWARD_SIZE]
-
+def make_reward_fun(rewards):
     def reward_fun(state, action):
         del state
         return action @ rewards
@@ -55,12 +52,9 @@ def run_cleaning_robot_experiment():
     allowed_policies = [p000, p001, p100, p110, p111]
 
     achievable_permutations = calculate_achievable_permutations(allowed_policies=allowed_policies,
-                                                                make_reward_fun=make_reward_fun_from_dec_vars,
+                                                                make_reward_fun=make_reward_fun,
                                                                 env=cleaning_env,
-                                                                reward_size=REWARD_SIZE,
-                                                                search_steps=SEARCH_STEPS,
-                                                                show_rewards=True,
-                                                                print_output=True)
+                                                                reward_size=REWARD_SIZE,)
     # achievable_permutations = [(p000, p001, p100, p110, p111),
     #                            (p000, p100, p001, p110, p111),
     #                            (p000, p100, p110, p001, p111)]
@@ -74,13 +68,13 @@ def run_cleaning_robot_experiment():
     # The adjacent_policy_relations list must be of length len(allowed_policies) - 1
     # 0: =, 1: <, 2: <=
     # adjacent_policy_relations = [2, 2, 2, 2, 2, 2, 2]
-    adjacent_policy_relations = [1, 0, 1, 1]
-
-    run_full_simplification_search(adjacent_policy_relations=adjacent_policy_relations,
-                                   policy_permutations=achievable_permutations,
-                                   make_reward_fun=make_reward_fun_from_dec_vars,
-                                   reward_size=REWARD_SIZE,
-                                   env=cleaning_env)
+    # adjacent_policy_relations = [1, 0, 1, 1]
+    #
+    # run_full_simplification_search(adjacent_policy_relations=adjacent_policy_relations,
+    #                                policy_permutations=achievable_permutations,
+    #                                make_reward_fun=make_reward_fun_from_dec_vars,
+    #                                reward_size=REWARD_SIZE,
+    #                                env=cleaning_env)
 
 
 if __name__ == '__main__':
