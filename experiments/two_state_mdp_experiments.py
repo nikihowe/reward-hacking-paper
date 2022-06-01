@@ -1,5 +1,5 @@
 # (c) 2022 Nikolaus Howe
-from mdp_env import MDPEnv
+from mdp_env import MDPWithoutRewardEnv
 from permutations import calculate_achievable_permutations
 from policy import make_two_state_policy
 from simplification import run_adjacent_relation_search, run_full_ordering_search
@@ -20,9 +20,9 @@ def dynamics(state, action):
 
 
 # Reward is deterministic and depends on state and action
-def make_reward_fun_from_dec_vars(dec_vars):
+def make_reward_fun_from_dec_vars(reward_components):
     # Reward values are first in the decision variable array
-    rewards = dec_vars[:REWARD_SIZE].reshape(REWARD_SHAPE)
+    rewards = reward_components.reshape(REWARD_SHAPE)
 
     def reward_fun(state, action):
         return rewards[state, action]
@@ -51,7 +51,7 @@ def fancy_print(perm, relation, reward):
 def run_two_state_mdp_experiment():
     # Set up the MDP\R
     discount = 0.5
-    env = MDPEnv(dynamics=dynamics, discount=discount)
+    env = MDPWithoutRewardEnv(dynamics=dynamics, discount=discount)
 
     # Choose the set of policies and rewards to consider
     policies = [(0, 0), (0, 1), (1, 0), (1, 1)]
@@ -80,10 +80,6 @@ def run_two_state_mdp_experiment():
         fancy_print(perm, realized_relations[i], realized_rewards[i])
 
     print("num perms", len(keep))
-    # Simplify the MDP\R
-    # Enforce adjacent policy relations as desired
-    # The adjacent_policy_relations list must be of length len(allowed_policies) - 1
-    # 0: =, 1: <, 2: <=
 
     run_full_ordering_search(policies=allowed_policies,
                              make_reward_fun=make_reward_fun_from_dec_vars,

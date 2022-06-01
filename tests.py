@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from mdp_env import MDPEnv
+from mdp_env import MDPWithoutRewardEnv
 from policy import Policy, make_cleaning_policy, make_two_state_policy
 
 
@@ -36,7 +36,7 @@ class TestEnvMethods(unittest.TestCase):
 
     def test_policy_eval(self):
         discount = 0.5
-        env = MDPEnv(dynamics=two_state_dynamics, discount=discount)
+        env = MDPWithoutRewardEnv(dynamics=two_state_dynamics, discount=discount)
 
         policy_funs = make_two_state_policies()
         simple_rewards = np.array([[0, 1],
@@ -57,7 +57,7 @@ class TestEnvMethods(unittest.TestCase):
     # Test policies
     def test_policies(self):
         discount = 0.5
-        env = MDPEnv(dynamics=two_state_dynamics, discount=discount)
+        env = MDPWithoutRewardEnv(dynamics=two_state_dynamics, discount=discount)
 
         policy_funs = make_two_state_policies()
         rewards = np.array([[0, 0],  # state 0
@@ -73,7 +73,7 @@ class TestEnvMethods(unittest.TestCase):
             return action
 
         discount = 0.5
-        env = MDPEnv(dynamics=dynamics, discount=discount)
+        env = MDPWithoutRewardEnv(dynamics=dynamics, discount=discount)
 
         policy_funs = make_two_state_policies()
         rewards = np.array([[0, 1],  # state 0
@@ -89,7 +89,7 @@ class TestEnvMethods(unittest.TestCase):
             return action
 
         discount = 0.5
-        env = MDPEnv(dynamics=dynamics, discount=discount)
+        env = MDPWithoutRewardEnv(dynamics=dynamics, discount=discount)
 
         policies = [(0, 1), (0, 0), (1, 1), (1, 0)]
         policy_funs = [
