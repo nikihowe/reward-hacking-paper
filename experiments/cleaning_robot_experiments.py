@@ -1,11 +1,11 @@
 # (c) 2022 Nikolaus Howe
-from mdp_env import MDPEnv
+from mdp_env import MDPWithoutRewardEnv
 from permutations import calculate_achievable_permutations
 from policy import make_cleaning_policy
-from simplification import run_full_simplification_search
+from simplification import run_full_ordering_search
 
 REWARD_SIZE = 3  # three rooms, so three reward components
-SEARCH_STEPS = 1000
+SEARCH_STEPS = 2000
 
 
 ##################
@@ -19,10 +19,7 @@ def cleaning_dynamics(state, action):
 
 
 # Make a reward function from decision variables
-def make_reward_fun_from_dec_vars(dec_vars):
-    # Reward values are first in the decision variable array
-    rewards = dec_vars[:REWARD_SIZE]
-
+def make_reward_fun(rewards):
     def reward_fun(state, action):
         del state
         return action @ rewards
@@ -32,7 +29,8 @@ def make_reward_fun_from_dec_vars(dec_vars):
 
 def run_cleaning_robot_experiment():
     # Set up the MDP\R
-    cleaning_env = MDPEnv(dynamics=cleaning_dynamics, discount=0)
+    cleaning_env = MDPWithoutRewardEnv(dynamics=cleaning_dynamics, discount=0, num_states=1, num_actions=8,
+                                       require_nonnegative_reward=True)
 
     # Choose the set of policies and rewards to consider
     policies = [
@@ -52,39 +50,40 @@ def run_cleaning_robot_experiment():
 
     # Specify which policies we want to choose among
     # allowed_policies = policy_funs
-    allowed_policies = [p000, p001, p100, p110, p111]
+    allowed_policies = [p000, p001, p110, p111]
 
-    achievable_permutations = calculate_achievable_permutations(allowed_policies=allowed_policies,
-                                                                make_reward_fun=make_reward_fun_from_dec_vars,
-                                                                env=cleaning_env,
-                                                                reward_size=REWARD_SIZE,
-                                                                search_steps=SEARCH_STEPS,
-                                                                show_rewards=True,
-                                                                print_output=True)
-    # achievable_permutations = [(p000, p001, p100, p110, p111),
-    #                            (p000, p100, p001, p110, p111),
-    #                            (p000, p100, p110, p001, p111)]
+    # try:
+    #     with open('cleaning_robot_experiment.pkl', 'rb') as f:
+    #         achievable_permutations = pkl.load(f)
+    # except FileNotFoundError:
+    # achievable_permutations = calculate_achievable_permutations(allowed_policies=allowed_policies,
+    #                                                             make_reward_fun=make_reward_fun,
+    #                                                             env=cleaning_env,
+    #                                                             reward_size=REWARD_SIZE, )
 
-    # Note that for the cleaning robot example, the mathematical program solver
-    # is not able to consistently find all the solutions. It would be interesting
-    # to better understand why this is the case (since in the two-state
-    # example, it finds them all without problem).
+    # pkl.dump(achievable_permutations, open('cleaning_robot_permutations.pkl', 'wb'))
 
-    # Enforce adjacent policy relations as desired
-    # The adjacent_policy_relations list must be of length len(allowed_policies) - 1
-    # 0: =, 1: <, 2: <=
-    # adjacent_policy_relations = [2, 2, 2, 2, 2, 2, 2]
-    adjacent_policy_relations = [2, 2, 2, 2]
+    run_full_ordering_search(policies=allowed_policies,
+                             make_reward_fun=make_reward_fun,
+                             reward_size=REWARD_SIZE,
+                             env=cleaning_env, )
 
-    policies_to_equate = [(p000, p100)]
 
-    run_full_simplification_search(adjacent_policy_relations=adjacent_policy_relations,
-                                   equal_policy_list=policies_to_equate,
-                                   policy_permutations=achievable_permutations,
-                                   make_reward_fun=make_reward_fun_from_dec_vars,
-                                   reward_size=REWARD_SIZE,
-                                   env=cleaning_env)
+# achievable_permutations = [(p000, p001, p100, p110, p111),
+#                            (p000, p100, p001, p110, p111),
+#                            (p000, p100, p110, p001, p111)]
 
+# Note that for the cleaning robot example, the mathematical program solver
+# is not able to consistently find all the solutions. It would be interesting
+# to better understand why this is the case (since in the two-state
+# example, it finds them all without problem).
+
+# Enforce adjacent policy relations as desired
+# The adjacent_policy_relations list must be of length len(allowed_policies) - 1
+# 0: =, 1: <, 2: <=
+# adjacent_policy_relations = [2, 2, 2, 2, 2, 2, 2]
+# adjacent_policy_relations = [1, 0, 1, 1]
+#
 
 if __name__ == '__main__':
     run_cleaning_robot_experiment()
