@@ -2,7 +2,7 @@
 from mdp_env import MDPWithoutRewardEnv
 from permutations import calculate_achievable_permutations
 from policy import make_cleaning_policy
-from simplification import run_full_ordering_search
+from policy_ordering import run_full_ordering_search
 
 REWARD_SIZE = 3  # three rooms, so three reward components
 SEARCH_STEPS = 2000

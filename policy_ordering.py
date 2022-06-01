@@ -10,12 +10,12 @@ from policy import Policy
 import utils
 
 
-def _simplification_search_solver(eq_constraints: Callable,
-                                  ineq_constraints: Callable,
-                                  make_reward_fun: Callable,
-                                  reward_size: int,
-                                  policy_permutation: tuple[Policy],
-                                  env: MDPWithoutRewardEnv):
+def _policy_ordering_search_solver(eq_constraints: Callable,
+                                   ineq_constraints: Callable,
+                                   make_reward_fun: Callable,
+                                   reward_size: int,
+                                   policy_permutation: tuple[Policy],
+                                   env: MDPWithoutRewardEnv):
     res = minimize(
         fun=lambda x: 0,
         x0=np.ones(reward_size),
@@ -46,7 +46,7 @@ def _simplification_search_solver(eq_constraints: Callable,
 
 # Given a policy permutation and adjacent policy relations, try to find a reward
 # function which satisfies them.
-def run_simplification_search(policy_permutation, adjacent_relations, make_reward_fun, reward_size, env):
+def run_policy_ordering_search(policy_permutation, adjacent_relations, make_reward_fun, reward_size, env):
     eq_constraints = utils.make_eq_constraints(env=env,
                                                policy_permutation=policy_permutation,
                                                make_reward_fun=make_reward_fun,
@@ -55,12 +55,12 @@ def run_simplification_search(policy_permutation, adjacent_relations, make_rewar
                                                    policy_permutation=policy_permutation,
                                                    make_reward_fun=make_reward_fun,
                                                    env=env)
-    _simplification_search_solver(eq_constraints=eq_constraints,
-                                  ineq_constraints=ineq_constraints,
-                                  make_reward_fun=make_reward_fun,
-                                  reward_size=reward_size,
-                                  policy_permutation=policy_permutation,
-                                  env=env)
+    _policy_ordering_search_solver(eq_constraints=eq_constraints,
+                                   ineq_constraints=ineq_constraints,
+                                   make_reward_fun=make_reward_fun,
+                                   reward_size=reward_size,
+                                   policy_permutation=policy_permutation,
+                                   env=env)
 
 
 # Given a policy permutation, test all adjacent policy relations to see if
@@ -75,7 +75,7 @@ def run_adjacent_relation_search(policy_permutation: tuple[Policy],
         print(f"Permutation: {policy_permutation}")
         print(f"Adjacent policy relations: {adjacent_relations}")
 
-        run_simplification_search(policy_permutation, adjacent_relations, make_reward_fun, reward_size, env)
+        run_policy_ordering_search(policy_permutation, adjacent_relations, make_reward_fun, reward_size, env)
 
 
 # Test all policy orderings and all adjacent policy relations to see if there is a

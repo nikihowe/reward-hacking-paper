@@ -2,7 +2,7 @@
 from mdp_env import MDPWithoutRewardEnv
 from permutations import calculate_achievable_permutations
 from policy import make_two_state_policy
-from simplification import run_adjacent_relation_search, run_full_ordering_search
+from policy_ordering import run_adjacent_relation_search, run_full_ordering_search
 
 REWARD_SIZE = 4  # four (s, a) pairs, different reward for each
 REWARD_SHAPE = (2, 2)
