@@ -5,7 +5,7 @@ import numpy as np
 from scipy.optimize import minimize
 from typing import Callable
 
-from mdp_env import MDPEnv
+from mdp_env import MDPWithoutRewardEnv
 from policy import Policy
 import utils
 
@@ -15,7 +15,7 @@ def _simplification_search_solver(eq_constraints: Callable,
                                   make_reward_fun: Callable,
                                   reward_size: int,
                                   policy_permutation: tuple[Policy],
-                                  env: MDPEnv):
+                                  env: MDPWithoutRewardEnv):
     res = minimize(
         fun=lambda x: 0,
         x0=np.ones(reward_size),
@@ -68,7 +68,7 @@ def run_simplification_search(policy_permutation, adjacent_relations, make_rewar
 def run_adjacent_relation_search(policy_permutation: tuple[Policy],
                                  make_reward_fun: Callable,
                                  reward_size: int,
-                                 env: MDPEnv) -> None:
+                                 env: MDPWithoutRewardEnv) -> None:
     list_of_all_adjacent_relations = list(itertools.product(*([range(2)] * (len(policy_permutation) - 1))))
 
     for adjacent_relations in list_of_all_adjacent_relations:
@@ -83,7 +83,7 @@ def run_adjacent_relation_search(policy_permutation: tuple[Policy],
 def run_full_ordering_search(policies: list[Policy],
                              make_reward_fun: Callable,
                              reward_size: int,
-                             env: MDPEnv) -> None:
+                             env: MDPWithoutRewardEnv) -> None:
     for policy_permutation in itertools.permutations(policies):
         run_adjacent_relation_search(policy_permutation, make_reward_fun, reward_size, env)
 
@@ -91,7 +91,7 @@ def run_full_ordering_search(policies: list[Policy],
 #                                    policy_permutations: list[tuple[Policy]],
 #                                    make_reward_fun: Callable,
 #                                    reward_size: int,
-#                                    env: MDPEnv) -> None:
+#                                    env: MDPWithoutRewardEnv) -> None:
 #     num_eps = len(policy_permutations[0]) - 1
 #     print("num_eps:", num_eps)
 #

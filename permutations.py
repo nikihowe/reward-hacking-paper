@@ -5,7 +5,7 @@ import numpy as np
 from scipy.optimize import minimize
 from typing import Callable
 
-from mdp_env import MDPEnv
+from mdp_env import MDPWithoutRewardEnv
 from policy import Policy
 import utils
 
@@ -13,7 +13,7 @@ import utils
 # Calculate which permutations are possible
 def calculate_achievable_permutations(allowed_policies: list[Policy],
                                       make_reward_fun: Callable,
-                                      env: MDPEnv,
+                                      env: MDPWithoutRewardEnv,
                                       reward_size: int,
                                       ):
     print("Considering all orderings of the following policies:")

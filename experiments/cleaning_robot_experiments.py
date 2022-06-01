@@ -1,5 +1,5 @@
 # (c) 2022 Nikolaus Howe
-from mdp_env import MDPEnv
+from mdp_env import MDPWithoutRewardEnv
 from permutations import calculate_achievable_permutations
 from policy import make_cleaning_policy
 from simplification import run_full_ordering_search
@@ -29,7 +29,8 @@ def make_reward_fun(rewards):
 
 def run_cleaning_robot_experiment():
     # Set up the MDP\R
-    cleaning_env = MDPEnv(dynamics=cleaning_dynamics, discount=0)
+    cleaning_env = MDPWithoutRewardEnv(dynamics=cleaning_dynamics, discount=0, num_states=1, num_actions=8,
+                                       require_nonnegative_reward=True)
 
     # Choose the set of policies and rewards to consider
     policies = [
@@ -65,7 +66,7 @@ def run_cleaning_robot_experiment():
     run_full_ordering_search(policies=allowed_policies,
                              make_reward_fun=make_reward_fun,
                              reward_size=REWARD_SIZE,
-                             env=cleaning_env)
+                             env=cleaning_env, )
 
 
 # achievable_permutations = [(p000, p001, p100, p110, p111),

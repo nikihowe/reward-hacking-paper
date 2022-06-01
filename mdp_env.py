@@ -10,7 +10,7 @@ POLICY_EVAL_HORIZON = 200  # how far in the future to calculate discounted rewar
 
 
 @dataclasses.dataclass
-class MDPEnv(object):
+class MDPWithoutRewardEnv(object):
     """
     Used to store some simple MDP elements
     """
@@ -18,10 +18,10 @@ class MDPEnv(object):
     discount: float
     num_states: int = 2
     num_actions: int = 2
+    require_nonnegative_reward: bool = False
 
     # def get_discounted_state_action_occupancy(self, state: int, ):
     #     occupancy_matrix = np.zeros((self.num_states, self.num_actions))
-
 
     def get_policy_value_with_counter(self, state: int, policy_fun: Policy, reward_fun: Callable, counter):
         if counter > 0:
@@ -38,20 +38,22 @@ class MDPEnv(object):
             return 0
 
     def get_policy_value(self, policy_fun, state, reward_fun):
-        return self.get_policy_value_with_counter(state=state,
-                                                  policy_fun=policy_fun,
-                                                  reward_fun=reward_fun,
-                                                  counter=POLICY_EVAL_HORIZON)
+        if self.discount == 0:  # single step case
+            return reward_fun(state, policy_fun(state))
+        else:
+            return self.get_policy_value_with_counter(state=state,
+                                                      policy_fun=policy_fun,
+                                                      reward_fun=reward_fun,
+                                                      counter=POLICY_EVAL_HORIZON)
 
     def get_average_policy_value(self, policy_fun, reward_fun):
-        return (self.get_policy_value_with_counter(policy_fun=policy_fun,
-                                                   state=0,
-                                                   reward_fun=reward_fun,
-                                                   counter=POLICY_EVAL_HORIZON)
-                + self.get_policy_value_with_counter(policy_fun=policy_fun,
-                                                     state=1,
-                                                     reward_fun=reward_fun,
-                                                     counter=POLICY_EVAL_HORIZON)) / 2
+        total = 0
+        for i in range(self.num_states):
+            total += self.get_policy_value_with_counter(policy_fun=policy_fun,
+                                                        state=i,
+                                                        reward_fun=reward_fun,
+                                                        counter=POLICY_EVAL_HORIZON)
+        return total / self.num_states
 
     def get_all_average_policy_values(self, policy_permutation: tuple[Policy],
                                       reward_fun: Callable[[int, int], float]):
