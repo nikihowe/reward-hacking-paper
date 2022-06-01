@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 import networkx as nx
 
 
-
 translate = {
     0: 'a',
     1: 'b',

@@ -32,7 +32,7 @@ def calculate_achievable_permutations(allowed_policies: list[Policy],
     realized_rewards = []
     for i, (perm, relation) in enumerate(weak_orderings):
         if i % 10 == 0:
-            print(f"testing {i+1} of {len(weak_orderings)}")
+            print(f"Working on permutation {i+1} of {len(weak_orderings)}")
         eq_constraints = utils.make_eq_constraints(env=env,
                                                    policy_permutation=perm,
                                                    make_reward_fun=make_reward_fun,

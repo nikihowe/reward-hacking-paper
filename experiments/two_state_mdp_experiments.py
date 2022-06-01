@@ -2,7 +2,7 @@
 from mdp_env import MDPEnv
 from permutations import calculate_achievable_permutations
 from policy import make_two_state_policy
-from simplification import run_full_simplification_search
+from simplification import run_adjacent_relation_search, run_full_ordering_search
 
 REWARD_SIZE = 4  # four (s, a) pairs, different reward for each
 REWARD_SHAPE = (2, 2)
@@ -72,7 +72,6 @@ def run_two_state_mdp_experiment():
 
     keep = []
     for i, perm in enumerate(realized_permutations):
-        # utils.fancy_print_permutation(perm, realized_relations[i], realized_rewards[i])
         if perm.index(p00) > perm.index(p11):
             continue
         if realized_relations[i] == (0, 0, 0):
@@ -85,13 +84,11 @@ def run_two_state_mdp_experiment():
     # Enforce adjacent policy relations as desired
     # The adjacent_policy_relations list must be of length len(allowed_policies) - 1
     # 0: =, 1: <, 2: <=
-    # adjacent_policy_relations = [1, 1, 1]
-    #
-    # run_full_simplification_search(adjacent_policy_relations=adjacent_policy_relations,
-    #                                policy_permutations=achievable_permutations,
-    #                                make_reward_fun=make_reward_fun_from_dec_vars,
-    #                                reward_size=REWARD_SIZE,
-    #                                env=env)
+
+    run_full_ordering_search(policies=allowed_policies,
+                             make_reward_fun=make_reward_fun_from_dec_vars,
+                             reward_size=REWARD_SIZE,
+                             env=env)
 
 
 if __name__ == "__main__":

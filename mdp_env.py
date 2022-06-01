@@ -16,6 +16,12 @@ class MDPEnv(object):
     """
     dynamics: Callable
     discount: float
+    num_states: int = 2
+    num_actions: int = 2
+
+    # def get_discounted_state_action_occupancy(self, state: int, ):
+    #     occupancy_matrix = np.zeros((self.num_states, self.num_actions))
+
 
     def get_policy_value_with_counter(self, state: int, policy_fun: Policy, reward_fun: Callable, counter):
         if counter > 0:
