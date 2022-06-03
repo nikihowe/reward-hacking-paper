@@ -29,6 +29,7 @@ This is the first environment presented in the paper. It is an 8-arm bandit with
 See the code in the `experiments` directory for example experiments on the two environments presented above.
 
 1) The `calculate_achievable_permutations` function can be used to calculated which permutations are achievable via a reward function. 
-2) The `run_full_simplification_search` function can be used to attempt to find reward functions which satisfy a given policy ordering simplification. In addition to specifying the policies to be equated, the user can further specify whether or not to impose equality, strict inequality, or inclusive inequality on policies which are adjacent in the initial ordering.
+2) The `run_full_ordering_search` function can be used to find all policy orderings which are realizable via some reward function.
+3) The `make_ungameability_graph` function can be used to generate a graph of all pairs of policy permutations result from the ungameable pairs of reward functions.
 
 To run an experiment, modify the code in `experiments` directory as desired, and then modify and call `run.py` from the root directory.

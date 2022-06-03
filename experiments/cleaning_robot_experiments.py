@@ -53,16 +53,10 @@ def run_cleaning_robot_experiment():
     # allowed_policies = policy_funs
     allowed_policies = [p001, p110, p111]
 
-    # try:
-    #     with open('cleaning_robot_experiment.pkl', 'rb') as f:
-    #         achievable_permutations = pkl.load(f)
-    # except FileNotFoundError:
-    # achievable_permutations = calculate_achievable_permutations(allowed_policies=allowed_policies,
-    #                                                             make_reward_fun=make_reward_fun,
-    #                                                             env=cleaning_env,
-    #                                                             reward_size=REWARD_SIZE, )
-
-    # pkl.dump(achievable_permutations, open('cleaning_robot_permutations.pkl', 'wb'))
+    achievable_permutations = calculate_achievable_permutations(allowed_policies=allowed_policies,
+                                                                make_reward_fun=make_reward_fun,
+                                                                env=cleaning_env,
+                                                                reward_size=REWARD_SIZE, )
 
     successful_orderings_with_relations = run_full_ordering_search(policies=allowed_policies,
                                                                    make_reward_fun=make_reward_fun,

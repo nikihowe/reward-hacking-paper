@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 import networkx as nx
 
 
-
 translate = {
     0: 'a',
     1: 'b',
@@ -26,10 +25,6 @@ def check_simplification(second, first):
             if el < el2 and not second[i] < second[j]:
                 return False
     return found_not_equal
-
-
-# print("sump", check_simplification([0, 1, 1], [0, 0, 0]))
-# raise SystemExit
 
 
 def values_to_string(ordering_and_relation):
