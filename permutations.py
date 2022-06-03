@@ -5,9 +5,9 @@ import numpy as np
 from scipy.optimize import minimize
 from typing import Callable
 
-from mdp_env import MDPWithoutRewardEnv
+from environment import MDPWithoutRewardEnv
 from policy import Policy
-import utils
+import constraints
 
 
 # Calculate which permutations are possible
@@ -33,11 +33,11 @@ def calculate_achievable_permutations(allowed_policies: list[Policy],
     for i, (perm, relation) in enumerate(weak_orderings):
         if i % 10 == 0:
             print(f"Working on permutation {i+1} of {len(weak_orderings)}")
-        eq_constraints = utils.make_eq_constraints(env=env,
+        eq_constraints = constraints.make_eq_constraints(env=env,
                                                    policy_permutation=perm,
                                                    make_reward_fun=make_reward_fun,
                                                    adjacent_policy_relations=list(relation))
-        ineq_constraints = utils.make_ineq_constraints(adjacent_policy_relations=list(relation),
+        ineq_constraints = constraints.make_ineq_constraints(adjacent_policy_relations=list(relation),
                                                        policy_permutation=perm,
                                                        make_reward_fun=make_reward_fun,
                                                        env=env)

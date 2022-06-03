@@ -1,7 +1,8 @@
 # (c) 2022 Nikolaus Howe
-from mdp_env import MDPWithoutRewardEnv
+from environment import MDPWithoutRewardEnv
+from gameability import make_ungameability_graph, check_ungameable, remove_equivalent_orderings
 from permutations import calculate_achievable_permutations
-from policy import make_two_state_policy
+from policy import Policy, make_two_state_policy
 from policy_ordering import run_adjacent_relation_search, run_full_ordering_search
 
 REWARD_SIZE = 4  # four (s, a) pairs, different reward for each
@@ -81,10 +82,27 @@ def run_two_state_mdp_experiment():
 
     print("num perms", len(keep))
 
-    run_full_ordering_search(policies=allowed_policies,
-                             make_reward_fun=make_reward_fun_from_dec_vars,
-                             reward_size=REWARD_SIZE,
-                             env=env)
+    successful_orderings_with_relations = run_full_ordering_search(policies=allowed_policies,
+                                                                   make_reward_fun=make_reward_fun_from_dec_vars,
+                                                                   reward_size=REWARD_SIZE,
+                                                                   env=env)
+
+    # Remove equivalent orderings
+    orderings_and_relations = remove_equivalent_orderings(set(successful_orderings_with_relations))
+
+    # Get ungameable pairs
+    ungameable_pairs = set()
+    for i, ordering_and_relation1 in enumerate(orderings_and_relations):
+        for j, ordering_and_relation2 in enumerate(orderings_and_relations):
+            if i == j:
+                continue
+
+            if check_ungameable(ordering_and_relation1, ordering_and_relation2):
+                ungameable_pairs.add((ordering_and_relation1, ordering_and_relation2))
+
+    print("ungameable", ungameable_pairs)
+
+    make_ungameability_graph(list(ungameable_pairs))
 
 
 if __name__ == "__main__":

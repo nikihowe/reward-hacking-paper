@@ -1,8 +1,9 @@
+# (c) 2022 Nikolaus Howe
 import unittest
 
 import numpy as np
 
-from mdp_env import MDPWithoutRewardEnv
+from environment import MDPWithoutRewardEnv
 from policy import Policy, make_cleaning_policy, make_two_state_policy
 
 

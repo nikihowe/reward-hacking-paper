@@ -1,5 +1,6 @@
 # (c) 2022 Nikolaus Howe
-from mdp_env import MDPWithoutRewardEnv
+from environment import MDPWithoutRewardEnv
+from gameability import remove_equivalent_orderings, check_ungameable, make_ungameability_graph
 from permutations import calculate_achievable_permutations
 from policy import make_cleaning_policy
 from policy_ordering import run_full_ordering_search
@@ -50,7 +51,7 @@ def run_cleaning_robot_experiment():
 
     # Specify which policies we want to choose among
     # allowed_policies = policy_funs
-    allowed_policies = [p000, p001, p110, p111]
+    allowed_policies = [p001, p110, p111]
 
     # try:
     #     with open('cleaning_robot_experiment.pkl', 'rb') as f:
@@ -63,27 +64,28 @@ def run_cleaning_robot_experiment():
 
     # pkl.dump(achievable_permutations, open('cleaning_robot_permutations.pkl', 'wb'))
 
-    run_full_ordering_search(policies=allowed_policies,
-                             make_reward_fun=make_reward_fun,
-                             reward_size=REWARD_SIZE,
-                             env=cleaning_env, )
+    successful_orderings_with_relations = run_full_ordering_search(policies=allowed_policies,
+                                                                   make_reward_fun=make_reward_fun,
+                                                                   reward_size=REWARD_SIZE,
+                                                                   env=cleaning_env)
 
+    # Remove equivalent orderings
+    orderings_and_relations = remove_equivalent_orderings(set(successful_orderings_with_relations))
 
-# achievable_permutations = [(p000, p001, p100, p110, p111),
-#                            (p000, p100, p001, p110, p111),
-#                            (p000, p100, p110, p001, p111)]
+    # Get ungameable pairs
+    ungameable_pairs = set()
+    for i, ordering_and_relation1 in enumerate(orderings_and_relations):
+        for j, ordering_and_relation2 in enumerate(orderings_and_relations):
+            if i == j:
+                continue
 
-# Note that for the cleaning robot example, the mathematical program solver
-# is not able to consistently find all the solutions. It would be interesting
-# to better understand why this is the case (since in the two-state
-# example, it finds them all without problem).
+            if check_ungameable(ordering_and_relation1, ordering_and_relation2):
+                ungameable_pairs.add((ordering_and_relation1, ordering_and_relation2))
 
-# Enforce adjacent policy relations as desired
-# The adjacent_policy_relations list must be of length len(allowed_policies) - 1
-# 0: =, 1: <, 2: <=
-# adjacent_policy_relations = [2, 2, 2, 2, 2, 2, 2]
-# adjacent_policy_relations = [1, 0, 1, 1]
-#
+    print("ungameable", ungameable_pairs)
+
+    make_ungameability_graph(list(ungameable_pairs))
+
 
 if __name__ == '__main__':
     run_cleaning_robot_experiment()

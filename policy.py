@@ -31,6 +31,9 @@ class Policy(object):
     def __lt__(self, other):
         return str(self.name) < str(other.name)
 
+    def get_name(self):
+        return self.name
+
 
 def make_two_state_policy(policy_tuple: tuple[int, int]) -> Policy:
     return Policy(policy_tuple, lambda state: policy_tuple[state])
