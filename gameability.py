@@ -1,5 +1,4 @@
 # 2022 (c) Nikolaus Howe
-import itertools
 import matplotlib
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -9,6 +8,18 @@ from typing import Any, Callable
 from environment import MDPWithoutRewardEnv
 from policy import Policy
 from utils import fancy_str_permutation
+
+
+def get_set_representation(ordering, relation):
+    list_of_sets = [{ordering[0]}]
+    for i, policy in enumerate(ordering[1:]):
+        if relation[i] == 0:
+            list_of_sets[-1].add(policy)
+        else:
+            assert relation[i] == 1
+            list_of_sets.append({policy})
+
+    return list_of_sets
 
 
 def check_gameable(policy_values_1, policy_values_2):
@@ -44,10 +55,12 @@ def get_ungameable_policies_and_values(policies: list[Policy], reward_fun: Calla
 def make_ungameability_graph(ungameable_policy_pairs: list[tuple[Any, Any]]):
     edges = set()
     nodes = set()
+    print("The ungameable pairs are:")
     for first, second in ungameable_policy_pairs:
         edges.add((first, second))
         nodes.add(first)
         nodes.add(second)
+        print(f"{first} and {second}")
 
     nodes = list(nodes)
 
@@ -62,8 +75,6 @@ def make_ungameability_graph(ungameable_policy_pairs: list[tuple[Any, Any]]):
 
 
 def plot_graph(nodes, edges, labels, title="Graph"):
-    print("the labels are", labels)
-
     matplotlib.use("pgf")
     matplotlib.rcParams.update({
         "pgf.texsystem": "pdflatex",
@@ -75,7 +86,7 @@ def plot_graph(nodes, edges, labels, title="Graph"):
     G = nx.Graph()
     G.add_edges_from(edges)
 
-    options = {"edgecolors": "tab:blue", "node_size": 1500, "alpha": 1}
+    options = {"edgecolors": "tab:blue", "node_size": 1000, "alpha": 1}
 
     pos = nx.spring_layout(G, seed=3113794651)  # positions for all nodes
 
@@ -87,7 +98,7 @@ def plot_graph(nodes, edges, labels, title="Graph"):
         width=1,
         alpha=1,
         edge_color="tab:blue",
-        node_size=1500,
+        node_size=1000,
     )
     nx.draw_networkx_labels(G, pos, labels, font_size=4, font_color="black", font_weight="bold")
 
@@ -95,6 +106,7 @@ def plot_graph(nodes, edges, labels, title="Graph"):
     plt.axis("off")
 
     plt.savefig(f'{title}.pdf')
+    plt.close()
 
 
 def remove_equivalent_orderings(orderings_and_relations: set[tuple[tuple[Policy], tuple[int]]]):
@@ -114,27 +126,15 @@ def remove_equivalent_orderings(orderings_and_relations: set[tuple[tuple[Policy]
                     else:
                         to_remove.add((ordering2, relation2))
 
-    print("all")
-
     return orderings_and_relations - to_remove  # set subtraction
 
-
-def get_set_representation(ordering, relation):
-    list_of_sets = [{ordering[0]}]
-    for i, policy in enumerate(ordering[1:]):
-        if relation[i] == 0:
-            list_of_sets[-1].add(policy)
-        else:
-            assert relation[i] == 1
-            list_of_sets.append({policy})
-
-    return list_of_sets
 
 def get_policy_set_index(policy: Policy, list_of_sets: list[set[Policy]]):
     for i, set_of_policies in enumerate(list_of_sets):
         if policy in set_of_policies:
             return i
     raise ValueError("Policy not found in list of sets")
+
 
 def check_ungameable(ordering_and_relation_1, ordering_and_relation_2):
     list_of_sets_1 = get_set_representation(*ordering_and_relation_1)

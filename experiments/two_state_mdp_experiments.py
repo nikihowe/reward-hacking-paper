@@ -4,6 +4,7 @@ from gameability import make_ungameability_graph, check_ungameable, remove_equiv
 from permutations import calculate_achievable_permutations
 from policy import Policy, make_two_state_policy
 from policy_ordering import run_adjacent_relation_search, run_full_ordering_search
+from simplification import check_simplification, make_simplification_graph
 
 REWARD_SIZE = 4  # four (s, a) pairs, different reward for each
 REWARD_SHAPE = (2, 2)
@@ -71,16 +72,16 @@ def run_two_state_mdp_experiment():
         env=env,
         reward_size=REWARD_SIZE, )
 
-    keep = []
-    for i, perm in enumerate(realized_permutations):
-        if perm.index(p00) > perm.index(p11):
-            continue
-        if realized_relations[i] == (0, 0, 0):
-            continue
-        keep.append((perm, realized_relations[i], realized_rewards[i]))
-        fancy_print(perm, realized_relations[i], realized_rewards[i])
-
-    print("num perms", len(keep))
+    # keep = []
+    # for i, perm in enumerate(realized_permutations):
+    #     if perm.index(p00) > perm.index(p11):
+    #         continue
+    #     if realized_relations[i] == (0, 0, 0):
+    #         continue
+    #     keep.append((perm, realized_relations[i], realized_rewards[i]))
+    #     fancy_print(perm, realized_relations[i], realized_rewards[i])
+    #
+    # print("num perms", len(keep))
 
     successful_orderings_with_relations = run_full_ordering_search(policies=allowed_policies,
                                                                    make_reward_fun=make_reward_fun_from_dec_vars,
@@ -90,7 +91,7 @@ def run_two_state_mdp_experiment():
     # Remove equivalent orderings
     orderings_and_relations = remove_equivalent_orderings(set(successful_orderings_with_relations))
 
-    # Get ungameable pairs
+    # Make ungameability graph
     ungameable_pairs = set()
     for i, ordering_and_relation1 in enumerate(orderings_and_relations):
         for j, ordering_and_relation2 in enumerate(orderings_and_relations):
@@ -100,9 +101,19 @@ def run_two_state_mdp_experiment():
             if check_ungameable(ordering_and_relation1, ordering_and_relation2):
                 ungameable_pairs.add((ordering_and_relation1, ordering_and_relation2))
 
-    print("ungameable", ungameable_pairs)
-
     make_ungameability_graph(list(ungameable_pairs))
+
+    # Make simplification graph
+    simplification_pairs = set()
+    for i, ordering_and_relation1 in enumerate(orderings_and_relations):
+        for j, ordering_and_relation2 in enumerate(orderings_and_relations):
+            if i == j:
+                continue
+
+            if check_simplification(ordering_and_relation1, ordering_and_relation2):
+                simplification_pairs.add((ordering_and_relation1, ordering_and_relation2))
+
+    make_simplification_graph(list(simplification_pairs))
 
 
 if __name__ == "__main__":

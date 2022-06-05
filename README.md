@@ -30,6 +30,7 @@ See the code in the `experiments` directory for example experiments on the two e
 
 1) The `calculate_achievable_permutations` function can be used to calculated which permutations are achievable via a reward function. 
 2) The `run_full_ordering_search` function can be used to find all policy orderings which are realizable via some reward function.
-3) The `make_ungameability_graph` function can be used to generate a graph of all pairs of policy permutations result from the ungameable pairs of reward functions.
+3) The `make_ungameability_graph` function can be used to generate a graph of all pairs of policy permutations resulting from the ungameable pairs of reward functions.
+3) The `make_simplification_graph` function can be used to generate a graph of all pairs of policy permutations resulting from the simplifications of reward functions.
 
 To run an experiment, modify the code in `experiments` directory as desired, and then modify and call `run.py` from the root directory.

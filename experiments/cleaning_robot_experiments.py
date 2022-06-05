@@ -4,6 +4,7 @@ from gameability import remove_equivalent_orderings, check_ungameable, make_unga
 from permutations import calculate_achievable_permutations
 from policy import make_cleaning_policy
 from policy_ordering import run_full_ordering_search
+from simplification import check_simplification, make_simplification_graph
 
 REWARD_SIZE = 3  # three rooms, so three reward components
 SEARCH_STEPS = 2000
@@ -76,9 +77,19 @@ def run_cleaning_robot_experiment():
             if check_ungameable(ordering_and_relation1, ordering_and_relation2):
                 ungameable_pairs.add((ordering_and_relation1, ordering_and_relation2))
 
-    print("ungameable", ungameable_pairs)
-
     make_ungameability_graph(list(ungameable_pairs))
+
+    # Get simplification pairs
+    simplification_pairs = set()
+    for i, ordering_and_relation1 in enumerate(orderings_and_relations):
+        for j, ordering_and_relation2 in enumerate(orderings_and_relations):
+            if i == j:
+                continue
+
+            if check_simplification(ordering_and_relation1, ordering_and_relation2):
+                simplification_pairs.add((ordering_and_relation1, ordering_and_relation2))
+
+    make_simplification_graph(list(simplification_pairs))
 
 
 if __name__ == '__main__':
