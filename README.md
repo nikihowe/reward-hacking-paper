@@ -8,9 +8,10 @@
 
 ```bash
 git clone https://github.com/nikihowe/reward-hacking-paper.git
-cd simplified-reward
-python3 -m venv venv
-python3 -m pip install -r requirements.txt
+cd reward-hacking-paper
+python -m venv venv
+source venv/bin/activate
+python -m pip install -r requirements.txt
 ```
 
 ## Implemented environments
