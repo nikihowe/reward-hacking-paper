@@ -34,7 +34,7 @@ See the code in the `experiments` directory for example experiments on the two e
 
 To run an experiment, modify the code in `experiments` directory as desired, and then modify and call `run.py` from the root directory.
 
-# Citation
+## Citation
 
 ```
 @article{skalse2022defining,
