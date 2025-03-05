@@ -1,9 +1,8 @@
 # [Defining and Characterizing Reward Hacking](https://arxiv.org/abs/2209.13085) accompanying code
 
-This repository currently supports two tasks.
-
-1) Given a set of policies, calculate which of the permutations of these policies could actually arise as an ordering due to a reward function.
-2) Given an ordering of policies and a set of policies to set equal, try to find a reward function which satisfies the ordering while setting equal the required policies.
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/c99044c5-687a-401b-a696-6813a3c8a1ff" width="500">
+</p>
 
 ## Installation
 
