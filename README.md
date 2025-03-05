@@ -1,11 +1,11 @@
-# Calculating Reward Function Permutations and Simplifications
+# [Defining and Characterizing Reward Hacking](https://arxiv.org/abs/2209.13085) accompanying code
 
 This repository currently supports two tasks.
 
 1) Given a set of policies, it calculates which of the permutations of these policies could actually arise as an ordering due to a reward function.
 2) Given an ordering of policies and a set of policies to set equal, it attempts to find a reward function which satisfies the ordering while setting equal the required policies.
 
-### Installation
+## Installation
 
 ```bash
 git clone git@github.com:nikihowe/simplified-reward.git
@@ -14,17 +14,17 @@ python3 -m venv venv
 python3 -m pip install -r requirements.txt
 ```
 
-### Implemented environments
+## Implemented environments
 
 There are two environments within the `experiments` directory.
 
-#### Two-state MDP
+### Two-state MDP
 This is the main environment for which the code was developed. It is a two-state Markov decision process with two actions. It is supported for both (1) and (2).
 
-#### Cleaning robot
+### Cleaning robot
 This is the first environment presented in the paper. It is an 8-arm bandit with special reward structure. It is supported for (1) and partially for (2).
 
-### Running experiments
+## Running experiments
 
 See the code in the `experiments` directory for example experiments on the two environments presented above.
 
@@ -34,3 +34,16 @@ See the code in the `experiments` directory for example experiments on the two e
 3) The `make_simplification_graph` function can be used to generate a graph of all pairs of policy permutations resulting from the simplifications of reward functions.
 
 To run an experiment, modify the code in `experiments` directory as desired, and then modify and call `run.py` from the root directory.
+
+# Citation
+
+```
+@article{skalse2022defining,
+  title={Defining and characterizing reward gaming},
+  author={Skalse, Joar and Howe, Nikolaus and Krasheninnikov, Dmitrii and Krueger, David},
+  journal={Advances in Neural Information Processing Systems},
+  volume={35},
+  pages={9460--9471},
+  year={2022}
+}
+```
