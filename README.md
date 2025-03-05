@@ -2,8 +2,8 @@
 
 This repository currently supports two tasks.
 
-1) Given a set of policies, it calculates which of the permutations of these policies could actually arise as an ordering due to a reward function.
-2) Given an ordering of policies and a set of policies to set equal, it attempts to find a reward function which satisfies the ordering while setting equal the required policies.
+1) Given a set of policies, calculate which of the permutations of these policies could actually arise as an ordering due to a reward function.
+2) Given an ordering of policies and a set of policies to set equal, try to find a reward function which satisfies the ordering while setting equal the required policies.
 
 ## Installation
 
