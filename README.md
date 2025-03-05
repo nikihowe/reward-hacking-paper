@@ -11,7 +11,7 @@ git clone https://github.com/nikihowe/reward-hacking-paper.git
 cd reward-hacking-paper
 python -m venv venv
 source venv/bin/activate
-python -m pip install -r requirements.txt
+pip install -r requirements.txt
 ```
 
 ## Implemented environments
