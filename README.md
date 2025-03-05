@@ -7,7 +7,7 @@
 ## Installation
 
 ```bash
-git clone git@github.com:nikihowe/simplified-reward.git
+git clone https://github.com/nikihowe/reward-hacking-paper.git
 cd simplified-reward
 python3 -m venv venv
 python3 -m pip install -r requirements.txt
